@@ -8,8 +8,8 @@ import (
 type TokenType string
 
 const (
-	LEFT_PAREN  TokenType = "LEFT_PARENT"
-	RIGHT_PAREN TokenType = "RIGHT_PARENT"
+	LEFT_PAREN  TokenType = "LEFT_PAREN"
+	RIGHT_PAREN TokenType = "RIGHT_PAREN"
 	EOF         TokenType = "EOF"
 )
 
