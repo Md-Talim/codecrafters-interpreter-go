@@ -5,6 +5,20 @@ import (
 	"os"
 )
 
+type TokenType string
+
+const (
+	LEFT_PAREN  TokenType = "LEFT_PARENT"
+	RIGHT_PAREN TokenType = "RIGHT_PARENT"
+	EOF         TokenType = "EOF"
+)
+
+type Token struct {
+	tokenType TokenType
+	lexeme    string
+	literal   interface{}
+}
+
 func main() {
 	if len(os.Args) < 3 {
 		fmt.Fprintln(os.Stderr, "Usage: ./your_program.sh tokenize <filename>")
@@ -25,9 +39,27 @@ func main() {
 		os.Exit(1)
 	}
 
-	if len(fileContents) > 0 {
-		panic("Scanner not implemented")
-	} else {
-		fmt.Println("EOF  null") // Placeholder, remove this line when implementing the scanner
+	tokens := []Token{}
+
+	for _, char := range fileContents {
+		switch char {
+		case '(':
+			tokens = append(tokens, Token{LEFT_PAREN, "(", nil})
+		case ')':
+			tokens = append(tokens, Token{RIGHT_PAREN, ")", nil})
+		}
+	}
+
+	tokens = append(tokens, Token{EOF, "", nil})
+
+	for _, token := range tokens {
+		var literalPrintValue string
+
+		if token.literal == nil {
+			literalPrintValue = "null"
+		} else {
+			literalPrintValue = fmt.Sprintf("%v", token.literal)
+		}
+		fmt.Printf("%s %s %s\n", token.tokenType, token.lexeme, literalPrintValue)
 	}
 }
