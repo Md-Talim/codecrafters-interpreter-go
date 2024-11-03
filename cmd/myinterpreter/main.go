@@ -10,6 +10,8 @@ type TokenType string
 const (
 	LEFT_PAREN  TokenType = "LEFT_PAREN"
 	RIGHT_PAREN TokenType = "RIGHT_PAREN"
+	LEFT_BRACE  TokenType = "LEFT_BRACE"
+	RIGHT_BRACE TokenType = "RIGHT_BRACE"
 	EOF         TokenType = "EOF"
 )
 
@@ -47,6 +49,10 @@ func main() {
 			tokens = append(tokens, Token{LEFT_PAREN, "(", nil})
 		case ')':
 			tokens = append(tokens, Token{RIGHT_PAREN, ")", nil})
+		case '{':
+			tokens = append(tokens, Token{LEFT_BRACE, "{", nil})
+		case '}':
+			tokens = append(tokens, Token{RIGHT_BRACE, "}", nil})
 		}
 	}
 
