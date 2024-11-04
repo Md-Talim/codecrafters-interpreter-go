@@ -48,6 +48,8 @@ func main() {
 	}
 
 	tokens := []Token{}
+	lineNumber := 1
+	lexicalError := false
 
 	for _, char := range fileContents {
 		switch char {
@@ -71,6 +73,11 @@ func main() {
 			tokens = append(tokens, Token{SEMICOLON, ";", nil})
 		case '*':
 			tokens = append(tokens, Token{STAR, "*", nil})
+		case '\n':
+			lineNumber++
+		default:
+			fmt.Fprintf(os.Stderr, "[line %d]: Unexpected character: %c\n", lineNumber, char)
+			lexicalError = true
 		}
 	}
 
@@ -85,5 +92,9 @@ func main() {
 			literalPrintValue = fmt.Sprintf("%v", token.literal)
 		}
 		fmt.Printf("%s %s %s\n", token.tokenType, token.lexeme, literalPrintValue)
+	}
+
+	if lexicalError {
+		os.Exit(65)
 	}
 }
