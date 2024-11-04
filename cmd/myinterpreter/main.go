@@ -12,6 +12,12 @@ const (
 	RIGHT_PAREN TokenType = "RIGHT_PAREN"
 	LEFT_BRACE  TokenType = "LEFT_BRACE"
 	RIGHT_BRACE TokenType = "RIGHT_BRACE"
+	COMMA       TokenType = "COMMA"
+	DOT         TokenType = "DOT"
+	MINUS       TokenType = "MINUS"
+	PLUS        TokenType = "PLUS"
+	SEMICOLON   TokenType = "SEMICOLON"
+	STAR        TokenType = "STAR"
 	EOF         TokenType = "EOF"
 )
 
@@ -53,6 +59,18 @@ func main() {
 			tokens = append(tokens, Token{LEFT_BRACE, "{", nil})
 		case '}':
 			tokens = append(tokens, Token{RIGHT_BRACE, "}", nil})
+		case ',':
+			tokens = append(tokens, Token{COMMA, ",", nil})
+		case '.':
+			tokens = append(tokens, Token{DOT, ".", nil})
+		case '-':
+			tokens = append(tokens, Token{MINUS, "-", nil})
+		case '+':
+			tokens = append(tokens, Token{PLUS, "+", nil})
+		case ';':
+			tokens = append(tokens, Token{SEMICOLON, ";", nil})
+		case '*':
+			tokens = append(tokens, Token{STAR, "*", nil})
 		}
 	}
 
