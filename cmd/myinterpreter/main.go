@@ -76,7 +76,7 @@ func main() {
 		case '\n':
 			lineNumber++
 		default:
-			fmt.Fprintf(os.Stderr, "[line %d]: Unexpected character: %c\n", lineNumber, char)
+			fmt.Fprintf(os.Stderr, "[line %d] Error: Unexpected character: %c\n", lineNumber, char)
 			lexicalError = true
 		}
 	}
