@@ -37,7 +37,7 @@ func tokenize(fileContents []byte) ([]Token, bool) {
 		case '\n':
 			lineNumber++
 		case '=':
-			if fileContents[i+1] == '=' {
+			if i+1 < length && fileContents[i+1] == '=' {
 				tokens = append(tokens, Token{EQUAL_EQUAL, "==", nil})
 				i++
 			} else {
@@ -46,7 +46,6 @@ func tokenize(fileContents []byte) ([]Token, bool) {
 		default:
 			fmt.Fprintf(os.Stderr, "[line %d] Error: Unexpected character: %c\n", lineNumber, char)
 			lexicalError = true
-
 		}
 	}
 
