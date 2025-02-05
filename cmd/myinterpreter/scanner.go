@@ -9,12 +9,10 @@ func tokenize(fileContents []byte) ([]Token, bool) {
 	tokens := []Token{}
 	lineNumber := 1
 	lexicalError := false
-	isComment := false
 	length := len(fileContents)
 
 	for i := 0; i < length; i++ {
 		char := fileContents[i]
-		isComment = false
 
 		switch char {
 		case '(':
@@ -73,17 +71,17 @@ func tokenize(fileContents []byte) ([]Token, bool) {
 			}
 		case '/':
 			if i+1 < length && fileContents[i+1] == '/' {
-				isComment = true
+				i++
+				for i < length && fileContents[i] != '\n' {
+					i++
+				}
+				lineNumber++
 			} else {
 				tokens = append(tokens, Token{SLASH, "/", nil})
 			}
 		default:
 			fmt.Fprintf(os.Stderr, "[line %d] Error: Unexpected character: %c\n", lineNumber, char)
 			lexicalError = true
-		}
-
-		if isComment {
-			break
 		}
 	}
 
