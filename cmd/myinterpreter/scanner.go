@@ -39,6 +39,10 @@ func tokenize(fileContents []byte) ([]Token, bool) {
 			tokens = append(tokens, Token{STAR, "*", nil})
 		case '\n':
 			lineNumber++
+		case '\t':
+			continue
+		case ' ':
+			continue
 		case '=':
 			if i+1 < length && fileContents[i+1] == '=' {
 				tokens = append(tokens, Token{EQUAL_EQUAL, "==", nil})
