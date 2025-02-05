@@ -18,6 +18,8 @@ const (
 	PLUS        TokenType = "PLUS"
 	SEMICOLON   TokenType = "SEMICOLON"
 	STAR        TokenType = "STAR"
+	EQUAL       TokenType = "EQUAL"
+	EQUAL_EQUAL TokenType = "EQUAL_EQUAL"
 	EOF         TokenType = "EOF"
 )
 
@@ -47,41 +49,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	tokens := []Token{}
-	lineNumber := 1
-	lexicalError := false
-
-	for _, char := range fileContents {
-		switch char {
-		case '(':
-			tokens = append(tokens, Token{LEFT_PAREN, "(", nil})
-		case ')':
-			tokens = append(tokens, Token{RIGHT_PAREN, ")", nil})
-		case '{':
-			tokens = append(tokens, Token{LEFT_BRACE, "{", nil})
-		case '}':
-			tokens = append(tokens, Token{RIGHT_BRACE, "}", nil})
-		case ',':
-			tokens = append(tokens, Token{COMMA, ",", nil})
-		case '.':
-			tokens = append(tokens, Token{DOT, ".", nil})
-		case '-':
-			tokens = append(tokens, Token{MINUS, "-", nil})
-		case '+':
-			tokens = append(tokens, Token{PLUS, "+", nil})
-		case ';':
-			tokens = append(tokens, Token{SEMICOLON, ";", nil})
-		case '*':
-			tokens = append(tokens, Token{STAR, "*", nil})
-		case '\n':
-			lineNumber++
-		default:
-			fmt.Fprintf(os.Stderr, "[line %d] Error: Unexpected character: %c\n", lineNumber, char)
-			lexicalError = true
-		}
-	}
-
-	tokens = append(tokens, Token{EOF, "", nil})
+	tokens, lexicalError := tokenize(fileContents)
 
 	for _, token := range tokens {
 		var literalPrintValue string
