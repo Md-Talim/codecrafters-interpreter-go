@@ -41,7 +41,7 @@ func tokenize(fileContents []byte) ([]Token, bool) {
 				tokens = append(tokens, Token{EQUAL_EQUAL, "==", nil})
 				i++
 			} else {
-				tokens = append(tokens, Token{EQUAL, "==", nil})
+				tokens = append(tokens, Token{EQUAL, "=", nil})
 			}
 		default:
 			fmt.Fprintf(os.Stderr, "[line %d] Error: Unexpected character: %c\n", lineNumber, char)
