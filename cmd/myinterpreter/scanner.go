@@ -50,6 +50,20 @@ func tokenize(fileContents []byte) ([]Token, bool) {
 			} else {
 				tokens = append(tokens, Token{BANG, "!", nil})
 			}
+		case '<':
+			if i+1 < length && fileContents[i+1] == '=' {
+				tokens = append(tokens, Token{LESS_EQUAL, "<=", nil})
+				i++
+			} else {
+				tokens = append(tokens, Token{LESS, "<", nil})
+			}
+		case '>':
+			if i+1 < length && fileContents[i+1] == '=' {
+				tokens = append(tokens, Token{GREATER_EQUAL, ">=", nil})
+				i++
+			} else {
+				tokens = append(tokens, Token{GREATER, ">", nil})
+			}
 		default:
 			fmt.Fprintf(os.Stderr, "[line %d] Error: Unexpected character: %c\n", lineNumber, char)
 			lexicalError = true
