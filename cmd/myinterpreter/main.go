@@ -54,10 +54,13 @@ func (l *Lox) parse(source string) {
 	scanner := NewScanner(source)
 	scanner.scanTokens()
 	parser := NewParser(scanner.tokens)
+
 	expr, err := parser.Parse()
 	if err != nil {
-		l.hadError = true
+		lox.parseError(err.token, err.message)
+		return
 	}
+
 	printer := &AstPrinter{}
 	fmt.Println(printer.Print(expr))
 }
@@ -69,4 +72,12 @@ func (l *Lox) error(line int, message string) {
 func (l *Lox) report(line int, where string, message string) {
 	fmt.Fprintf(os.Stderr, "[line %d] Error%s: %s\n", line, where, message)
 	l.hadError = true
+}
+
+func (l *Lox) parseError(token Token, message string) {
+	if token.Type == EOF {
+		l.report(token.Line, " at end", message)
+	} else {
+		l.report(token.Line, " at '"+token.Lexeme+"'", message)
+	}
 }
