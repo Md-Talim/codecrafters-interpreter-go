@@ -8,6 +8,10 @@ func (a *AstPrinter) Print(expr Expr) string {
 	return expr.Accept(a)
 }
 
+func (a *AstPrinter) VisitBinaryExpr(expr *Binary) string {
+	return a.parenthesize(expr.Operator.Lexeme, expr.Left, expr.Right)
+}
+
 func (a *AstPrinter) VisitLiteralExpr(expr *Literal) string {
 	if expr.Value == nil {
 		return "nil"

@@ -4,10 +4,21 @@ type Visitor interface {
 	VisitLiteralExpr(expr *Literal) string
 	VisitGroupingExpr(expr *Grouping) string
 	VisitUnaryExpr(expr *Unary) string
+	VisitBinaryExpr(expr *Binary) string
 }
 
 type Expr interface {
 	Accept(visitor Visitor) string
+}
+
+type Binary struct {
+	Left     Expr
+	Operator Token
+	Right    Expr
+}
+
+func (b *Binary) Accept(visitor Visitor) string {
+	return visitor.VisitBinaryExpr(b)
 }
 
 type Literal struct {
