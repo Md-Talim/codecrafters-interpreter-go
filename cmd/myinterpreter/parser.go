@@ -27,6 +27,12 @@ func (p *Parser) primary() (Expr, error) {
 	if p.match(NUMBER, STRING) {
 		return &Literal{Value: p.previous().Literal}, nil
 	}
+
+	if p.match(LEFT_PAREN) {
+		expr, _ := p.expression()
+		p.consume(RIGHT_PAREN, "Expect ')' after expression.")
+		return &Grouping{Expression: expr}, nil
+	}
 	return nil, fmt.Errorf("unexpected token")
 }
 
@@ -70,4 +76,11 @@ func (p *Parser) match(types ...TokenType) bool {
 		return true
 	}
 	return false
+}
+
+func (p *Parser) consume(t TokenType, msg string) Token {
+	if p.check(t) {
+		return p.advance()
+	}
+	panic(msg)
 }

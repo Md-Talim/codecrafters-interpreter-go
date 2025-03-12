@@ -14,3 +14,16 @@ func (a *AstPrinter) VisitLiteralExpr(expr *Literal) string {
 	}
 	return fmt.Sprintf("%v", expr.Value)
 }
+
+func (a *AstPrinter) VisitGroupingExpr(expr *Grouping) string {
+	return a.parenthesize("group", expr.Expression)
+}
+
+func (a *AstPrinter) parenthesize(name string, exprs ...Expr) string {
+	result := "(" + name
+	for _, expr := range exprs {
+		result += " " + expr.Accept(a)
+	}
+	result += ")"
+	return result
+}

@@ -2,6 +2,7 @@ package main
 
 type Visitor interface {
 	VisitLiteralExpr(expr *Literal) string
+	VisitGroupingExpr(expr *Grouping) string
 }
 
 type Expr interface {
@@ -14,4 +15,12 @@ type Literal struct {
 
 func (l *Literal) Accept(visitor Visitor) string {
 	return visitor.VisitLiteralExpr(l)
+}
+
+type Grouping struct {
+	Expression Expr
+}
+
+func (g *Grouping) Accept(visitor Visitor) string {
+	return visitor.VisitGroupingExpr(g)
 }
