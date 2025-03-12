@@ -36,8 +36,17 @@ func (p *Parser) primary() (Expr, error) {
 	return nil, fmt.Errorf("unexpected token")
 }
 
-func (p *Parser) expression() (Expr, error) {
+func (p *Parser) unary() (Expr, error) {
+	if p.match(BANG) {
+		operator := p.previous()
+		right, _ := p.unary()
+		return &Unary{Operator: operator, Right: right}, nil
+	}
 	return p.primary()
+}
+
+func (p *Parser) expression() (Expr, error) {
+	return p.unary()
 }
 
 func (p *Parser) Parse() (Expr, error) {

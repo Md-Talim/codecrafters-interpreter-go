@@ -19,6 +19,10 @@ func (a *AstPrinter) VisitGroupingExpr(expr *Grouping) string {
 	return a.parenthesize("group", expr.Expression)
 }
 
+func (a *AstPrinter) VisitUnaryExpr(expr *Unary) string {
+	return a.parenthesize(expr.Operator.Lexeme, expr.Right)
+}
+
 func (a *AstPrinter) parenthesize(name string, exprs ...Expr) string {
 	result := "(" + name
 	for _, expr := range exprs {
