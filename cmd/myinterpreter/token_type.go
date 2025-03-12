@@ -23,6 +23,7 @@ const (
 	GREATER_EQUAL
 	SLASH
 	STRING
+	NUMBER
 	EOF
 )
 
@@ -47,5 +48,6 @@ var tokenTypeNames = map[TokenType]string{
 	LESS:          "LESS",
 	LESS_EQUAL:    "LESS_EQUAL",
 	STRING:        "STRING",
+	NUMBER:        "NUMBER",
 	EOF:           "EOF",
 }

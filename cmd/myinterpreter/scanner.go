@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 type Scanner struct {
 	source  []rune
@@ -88,7 +91,11 @@ func (s *Scanner) scanToken() {
 	case '"':
 		s.scanString()
 	default:
-		lox.error(s.line, fmt.Sprintf("Unexpected character: %c", c))
+		if isDigit(c) {
+			s.scanNumber()
+		} else {
+			lox.error(s.line, fmt.Sprintf("Unexpected character: %c", c))
+		}
 	}
 }
 
@@ -113,6 +120,32 @@ func (s *Scanner) scanString() {
 	s.addTokenWithLiteral(STRING, value)
 }
 
+func (s *Scanner) scanNumber() {
+	for isDigit(s.peek()) {
+		s.advance()
+	}
+
+	// look for fractional part
+	if s.peek() == '.' && isDigit(s.peekNext()) {
+		// consume the .
+		s.advance()
+
+		for isDigit(s.peek()) {
+			s.advance()
+		}
+	}
+
+	// grab the number as text & parse into float
+	text := string(s.source[s.start:s.current])
+	num, err := formatFloat(text)
+	if err != nil {
+		lox.error(s.line, "Invalid number literal.")
+		return
+	}
+
+	s.addTokenWithLiteral(NUMBER, num)
+}
+
 func (s *Scanner) match(expected rune) bool {
 	if s.isAtEnd() {
 		return false
@@ -132,6 +165,13 @@ func (s *Scanner) peek() rune {
 	return s.source[s.current]
 }
 
+func (s *Scanner) peekNext() rune {
+	if s.current+1 >= len(s.source) {
+		return 0
+	}
+	return s.source[s.current+1]
+}
+
 func (s *Scanner) isAtEnd() bool {
 	return s.current >= len(s.source)
 }
@@ -149,4 +189,21 @@ func (s *Scanner) addToken(t TokenType) {
 func (s *Scanner) addTokenWithLiteral(t TokenType, literal any) {
 	text := string(s.source[s.start:s.current])
 	s.tokens = append(s.tokens, &Token{Type: t, Lexeme: text, Literal: literal, Line: s.line})
+}
+
+func isDigit(c rune) bool {
+	return c >= '0' && c <= '9'
+}
+
+func formatFloat(text string) (string, error) {
+	num, err := strconv.ParseFloat(text, 64)
+	if err != nil {
+		return "", err
+	}
+
+	// check if number is effectively an integer
+	if num == float64(int(num)) {
+		return fmt.Sprintf("%.1f", num), nil
+	}
+	return fmt.Sprintf("%g", num), nil
 }
