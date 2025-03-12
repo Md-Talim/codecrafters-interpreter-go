@@ -1,91 +1,129 @@
 package main
 
-import (
-	"fmt"
-	"os"
-)
+import "fmt"
 
-func tokenize(fileContents []byte) ([]Token, bool) {
-	tokens := []Token{}
-	lineNumber := 1
-	lexicalError := false
-	length := len(fileContents)
+type Scanner struct {
+	source  []rune
+	tokens  []*Token
+	start   int // points to the first character in the lexeme being scanned
+	current int // points at the character currently being considered
+	line    int // tracks what source line 'current' is on
+}
 
-	for i := 0; i < length; i++ {
-		char := fileContents[i]
+func NewScanner(source string) *Scanner {
+	return &Scanner{source: []rune(source), line: 1}
+}
 
-		switch char {
-		case '(':
-			tokens = append(tokens, Token{LEFT_PAREN, "(", nil})
-		case ')':
-			tokens = append(tokens, Token{RIGHT_PAREN, ")", nil})
-		case '{':
-			tokens = append(tokens, Token{LEFT_BRACE, "{", nil})
-		case '}':
-			tokens = append(tokens, Token{RIGHT_BRACE, "}", nil})
-		case ',':
-			tokens = append(tokens, Token{COMMA, ",", nil})
-		case '.':
-			tokens = append(tokens, Token{DOT, ".", nil})
-		case '-':
-			tokens = append(tokens, Token{MINUS, "-", nil})
-		case '+':
-			tokens = append(tokens, Token{PLUS, "+", nil})
-		case ';':
-			tokens = append(tokens, Token{SEMICOLON, ";", nil})
-		case '*':
-			tokens = append(tokens, Token{STAR, "*", nil})
-		case '\n':
-			lineNumber++
-		case '\t':
-			continue
-		case ' ':
-			continue
-		case '=':
-			if i+1 < length && fileContents[i+1] == '=' {
-				tokens = append(tokens, Token{EQUAL_EQUAL, "==", nil})
-				i++
-			} else {
-				tokens = append(tokens, Token{EQUAL, "=", nil})
-			}
-		case '!':
-			if i+1 < length && fileContents[i+1] == '=' {
-				tokens = append(tokens, Token{BANG_EQUAL, "!=", nil})
-				i++
-			} else {
-				tokens = append(tokens, Token{BANG, "!", nil})
-			}
-		case '<':
-			if i+1 < length && fileContents[i+1] == '=' {
-				tokens = append(tokens, Token{LESS_EQUAL, "<=", nil})
-				i++
-			} else {
-				tokens = append(tokens, Token{LESS, "<", nil})
-			}
-		case '>':
-			if i+1 < length && fileContents[i+1] == '=' {
-				tokens = append(tokens, Token{GREATER_EQUAL, ">=", nil})
-				i++
-			} else {
-				tokens = append(tokens, Token{GREATER, ">", nil})
-			}
-		case '/':
-			if i+1 < length && fileContents[i+1] == '/' {
-				i++
-				for i < length && fileContents[i] != '\n' {
-					i++
-				}
-				lineNumber++
-			} else {
-				tokens = append(tokens, Token{SLASH, "/", nil})
-			}
-		default:
-			fmt.Fprintf(os.Stderr, "[line %d] Error: Unexpected character: %c\n", lineNumber, char)
-			lexicalError = true
-		}
+func (s *Scanner) scanTokens() {
+	for !s.isAtEnd() {
+		s.start = s.current
+		s.scanToken()
 	}
 
-	tokens = append(tokens, Token{EOF, "", nil})
+	s.tokens = append(s.tokens, &Token{Type: EOF, Lexeme: "", Literal: nil, Line: s.line})
+}
 
-	return tokens, lexicalError
+func (s *Scanner) scanToken() {
+	c := s.advance()
+	switch c {
+	// single-character tokens
+	case '(':
+		s.addToken(LEFT_PAREN)
+	case ')':
+		s.addToken(RIGHT_PAREN)
+	case '{':
+		s.addToken(LEFT_BRACE)
+	case '}':
+		s.addToken(RIGHT_BRACE)
+	case ',':
+		s.addToken(COMMA)
+	case '.':
+		s.addToken(DOT)
+	case '-':
+		s.addToken(MINUS)
+	case '+':
+		s.addToken(PLUS)
+	case ';':
+		s.addToken(SEMICOLON)
+	case '*':
+		s.addToken(STAR)
+	// operators
+	case '!':
+		if s.match('=') {
+			s.addToken(BANG_EQUAL)
+		} else {
+			s.addToken(BANG)
+		}
+	case '=':
+		if s.match('=') {
+			s.addToken(EQUAL_EQUAL)
+		} else {
+			s.addToken(EQUAL)
+		}
+	case '<':
+		if s.match('=') {
+			s.addToken(LESS_EQUAL)
+		} else {
+			s.addToken(LESS)
+		}
+	case '>':
+		if s.match('=') {
+			s.addToken(GREATER_EQUAL)
+		} else {
+			s.addToken(GREATER)
+		}
+	case '/':
+		if s.match('/') {
+			for s.peek() != '\n' && !s.isAtEnd() {
+				s.advance()
+			}
+		} else {
+			s.addToken(SLASH)
+		}
+	// skip over other meaningless characters: newlines and whitespace
+	case ' ', '\r', '\t':
+		break
+	case '\n':
+		s.line++
+	default:
+		lox.error(s.line, fmt.Sprintf("Unexpected character: %c", c))
+	}
+}
+
+func (s *Scanner) match(expected rune) bool {
+	if s.isAtEnd() {
+		return false
+	}
+	if s.source[s.current] != expected {
+		return false
+	}
+
+	s.current++
+	return true
+}
+
+func (s *Scanner) peek() rune {
+	if s.isAtEnd() {
+		return 0
+	}
+	return s.source[s.current]
+}
+
+func (s *Scanner) isAtEnd() bool {
+	return s.current >= len(s.source)
+}
+
+func (s *Scanner) advance() rune {
+	token := s.source[s.current]
+	s.current++
+	return token
+}
+
+func (s *Scanner) addToken(t TokenType) {
+	s.addTokenWithLiteral(t, nil)
+}
+
+func (s *Scanner) addTokenWithLiteral(t TokenType, literal any) {
+	text := string(s.source[s.start:s.current])
+	s.tokens = append(s.tokens, &Token{Type: t, Lexeme: text, Literal: literal, Line: s.line})
 }

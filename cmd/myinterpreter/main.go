@@ -5,36 +5,11 @@ import (
 	"os"
 )
 
-type TokenType string
-
-const (
-	LEFT_PAREN    TokenType = "LEFT_PAREN"
-	RIGHT_PAREN   TokenType = "RIGHT_PAREN"
-	LEFT_BRACE    TokenType = "LEFT_BRACE"
-	RIGHT_BRACE   TokenType = "RIGHT_BRACE"
-	COMMA         TokenType = "COMMA"
-	DOT           TokenType = "DOT"
-	MINUS         TokenType = "MINUS"
-	PLUS          TokenType = "PLUS"
-	SEMICOLON     TokenType = "SEMICOLON"
-	STAR          TokenType = "STAR"
-	EQUAL         TokenType = "EQUAL"
-	EQUAL_EQUAL   TokenType = "EQUAL_EQUAL"
-	BANG          TokenType = "BANG"
-	BANG_EQUAL    TokenType = "BANG_EQUAL"
-	LESS          TokenType = "LESS"
-	LESS_EQUAL    TokenType = "LESS_EQUAL"
-	GREATER       TokenType = "GREATER"
-	GREATER_EQUAL TokenType = "GREATER_EQUAL"
-	SLASH         TokenType = "SLASH"
-	EOF           TokenType = "EOF"
-)
-
-type Token struct {
-	tokenType TokenType
-	lexeme    string
-	literal   interface{}
+type Lox struct {
+	hadError bool
 }
+
+var lox = Lox{}
 
 func main() {
 	if len(os.Args) < 3 {
@@ -56,20 +31,27 @@ func main() {
 		os.Exit(1)
 	}
 
-	tokens, lexicalError := tokenize(fileContents)
+	lox.tokenize(string(fileContents))
 
-	for _, token := range tokens {
-		var literalPrintValue string
-
-		if token.literal == nil {
-			literalPrintValue = "null"
-		} else {
-			literalPrintValue = fmt.Sprintf("%v", token.literal)
-		}
-		fmt.Printf("%s %s %s\n", token.tokenType, token.lexeme, literalPrintValue)
-	}
-
-	if lexicalError {
+	if lox.hadError {
 		os.Exit(65)
 	}
+}
+
+func (l *Lox) tokenize(source string) {
+	scanner := NewScanner(source)
+	scanner.scanTokens()
+
+	for _, token := range scanner.tokens {
+		fmt.Println(token)
+	}
+}
+
+func (l *Lox) error(line int, message string) {
+	l.report(line, "", message)
+}
+
+func (l *Lox) report(line int, where string, message string) {
+	fmt.Fprintf(os.Stderr, "[line %d] Error%s: %s\n", line, where, message)
+	l.hadError = true
 }
