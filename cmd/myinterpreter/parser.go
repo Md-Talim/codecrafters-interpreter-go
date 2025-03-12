@@ -57,8 +57,20 @@ func (p *Parser) factor() (Expr, error) {
 	return expr, nil
 }
 
+func (p *Parser) term() (Expr, error) {
+	expr, _ := p.factor()
+
+	for p.match(PLUS, MINUS) {
+		operator := p.previous()
+		right, _ := p.factor()
+		expr = &Binary{Left: expr, Operator: operator, Right: right}
+	}
+
+	return expr, nil
+}
+
 func (p *Parser) expression() (Expr, error) {
-	return p.factor()
+	return p.term()
 }
 
 func (p *Parser) Parse() (Expr, error) {
