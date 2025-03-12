@@ -24,7 +24,7 @@ func (p *Parser) primary() (Expr, error) {
 	if p.match(NIL) {
 		return &Literal{Value: nil}, nil
 	}
-	if p.match(NUMBER) {
+	if p.match(NUMBER, STRING) {
 		return &Literal{Value: p.previous().Literal}, nil
 	}
 	return nil, fmt.Errorf("unexpected token")
