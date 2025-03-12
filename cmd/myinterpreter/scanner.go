@@ -152,7 +152,13 @@ func (s *Scanner) scanIdentifier() {
 	for isAlphaNumeric(s.peek()) {
 		s.advance()
 	}
-	s.addToken(IDENTIFIER)
+
+	text := string(s.source[s.start:s.current])
+	tokenType, ok := keywords[text]
+	if !ok {
+		tokenType = IDENTIFIER
+	}
+	s.addToken(tokenType)
 }
 
 func (s *Scanner) match(expected rune) bool {

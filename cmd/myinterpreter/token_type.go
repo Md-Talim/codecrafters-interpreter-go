@@ -25,6 +25,24 @@ const (
 	STRING
 	NUMBER
 	IDENTIFIER
+
+	// Keywords
+	AND
+	CLASS
+	ELSE
+	FALSE
+	FOR
+	FUN
+	IF
+	NIL
+	OR
+	PRINT
+	RETURN
+	SUPER
+	THIS
+	TRUE
+	VAR
+	WHILE
 	EOF
 )
 
@@ -51,5 +69,40 @@ var tokenTypeNames = map[TokenType]string{
 	STRING:        "STRING",
 	NUMBER:        "NUMBER",
 	IDENTIFIER:    "IDENTIFIER",
+	AND:           "AND",
+	CLASS:         "CLASS",
+	ELSE:          "ELSE",
+	FALSE:         "FALSE",
+	FOR:           "FOR",
+	FUN:           "FUN",
+	IF:            "IF",
+	NIL:           "NIL",
+	OR:            "OR",
+	PRINT:         "PRINT",
+	RETURN:        "RETURN",
+	SUPER:         "SUPER",
+	THIS:          "THIS",
+	TRUE:          "TRUE",
+	VAR:           "VAR",
+	WHILE:         "WHILE",
 	EOF:           "EOF",
+}
+
+var keywords = map[string]TokenType{
+	"and":    AND,
+	"class":  CLASS,
+	"else":   ELSE,
+	"false":  FALSE,
+	"for":    FOR,
+	"fun":    FUN,
+	"if":     IF,
+	"nil":    NIL,
+	"or":     OR,
+	"print":  PRINT,
+	"return": RETURN,
+	"super":  SUPER,
+	"this":   THIS,
+	"true":   TRUE,
+	"var":    VAR,
+	"while":  WHILE,
 }
