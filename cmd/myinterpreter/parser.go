@@ -37,7 +37,7 @@ func (p *Parser) primary() (Expr, error) {
 }
 
 func (p *Parser) unary() (Expr, error) {
-	if p.match(BANG) {
+	if p.match(BANG, MINUS) {
 		operator := p.previous()
 		right, _ := p.unary()
 		return &Unary{Operator: operator, Right: right}, nil
