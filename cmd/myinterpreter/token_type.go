@@ -24,6 +24,7 @@ const (
 	SLASH
 	STRING
 	NUMBER
+	IDENTIFIER
 	EOF
 )
 
@@ -49,5 +50,6 @@ var tokenTypeNames = map[TokenType]string{
 	LESS_EQUAL:    "LESS_EQUAL",
 	STRING:        "STRING",
 	NUMBER:        "NUMBER",
+	IDENTIFIER:    "IDENTIFIER",
 	EOF:           "EOF",
 }

@@ -93,6 +93,8 @@ func (s *Scanner) scanToken() {
 	default:
 		if isDigit(c) {
 			s.scanNumber()
+		} else if isAlpha(c) {
+			s.scanIdentifier()
 		} else {
 			lox.error(s.line, fmt.Sprintf("Unexpected character: %c", c))
 		}
@@ -146,6 +148,13 @@ func (s *Scanner) scanNumber() {
 	s.addTokenWithLiteral(NUMBER, num)
 }
 
+func (s *Scanner) scanIdentifier() {
+	for isAlphaNumeric(s.peek()) {
+		s.advance()
+	}
+	s.addToken(IDENTIFIER)
+}
+
 func (s *Scanner) match(expected rune) bool {
 	if s.isAtEnd() {
 		return false
@@ -189,6 +198,14 @@ func (s *Scanner) addToken(t TokenType) {
 func (s *Scanner) addTokenWithLiteral(t TokenType, literal any) {
 	text := string(s.source[s.start:s.current])
 	s.tokens = append(s.tokens, &Token{Type: t, Lexeme: text, Literal: literal, Line: s.line})
+}
+
+func isAlpha(c rune) bool {
+	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'
+}
+
+func isAlphaNumeric(c rune) bool {
+	return isAlpha(c) || isDigit(c)
 }
 
 func isDigit(c rune) bool {
