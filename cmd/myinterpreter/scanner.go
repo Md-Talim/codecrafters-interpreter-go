@@ -85,9 +85,32 @@ func (s *Scanner) scanToken() {
 		break
 	case '\n':
 		s.line++
+	case '"':
+		s.scanString()
 	default:
 		lox.error(s.line, fmt.Sprintf("Unexpected character: %c", c))
 	}
+}
+
+func (s *Scanner) scanString() {
+	for s.peek() != '"' && !s.isAtEnd() {
+		if s.peek() == '\n' {
+			s.line++
+		}
+		s.advance()
+	}
+
+	if s.isAtEnd() {
+		lox.error(s.line, "Unterminated string.")
+		return
+	}
+
+	// the closing ".
+	s.advance()
+
+	// trim the surrounding quotes
+	value := string(s.source[s.start+1 : s.current-1])
+	s.addTokenWithLiteral(STRING, value)
 }
 
 func (s *Scanner) match(expected rune) bool {
