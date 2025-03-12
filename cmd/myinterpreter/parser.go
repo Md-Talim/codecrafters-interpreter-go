@@ -81,8 +81,20 @@ func (p *Parser) comparison() (Expr, error) {
 	return expr, nil
 }
 
+func (p *Parser) equality() (Expr, error) {
+	expr, _ := p.comparison()
+
+	for p.match(EQUAL_EQUAL, BANG_EQUAL) {
+		operator := p.previous()
+		right, _ := p.comparison()
+		expr = &Binary{Left: expr, Operator: operator, Right: right}
+	}
+
+	return expr, nil
+}
+
 func (p *Parser) expression() (Expr, error) {
-	return p.comparison()
+	return p.equality()
 }
 
 func (p *Parser) Parse() (Expr, error) {
