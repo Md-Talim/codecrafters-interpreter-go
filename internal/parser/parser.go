@@ -42,7 +42,7 @@ func (p *Parser) primary() (ast.Expr, *ParseError) {
 	if p.match(ast.NilKeyword) {
 		return &ast.Literal{Value: nil}, nil
 	}
-	if p.match(ast.NumberToken, ast.NumberToken) {
+	if p.match(ast.StringToken, ast.NumberToken) {
 		return &ast.Literal{Value: p.previous().Literal}, nil
 	}
 
