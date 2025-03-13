@@ -1,4 +1,4 @@
-package main
+package ast
 
 type Visitor interface {
 	VisitLiteralExpr(expr *Literal) string

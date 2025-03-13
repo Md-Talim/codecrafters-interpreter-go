@@ -3,13 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
+
+	"codecrafters-interpreter-go/pkg/lox"
 )
-
-type Lox struct {
-	hadError bool
-}
-
-var lox = Lox{}
 
 func main() {
 	if len(os.Args) < 3 {
@@ -18,6 +14,8 @@ func main() {
 	}
 
 	command := os.Args[1]
+
+	lox := lox.Lox{}
 
 	filename := os.Args[2]
 	fileContents, err := os.ReadFile(filename)
@@ -28,56 +26,15 @@ func main() {
 
 	switch command {
 	case "tokenize":
-		lox.tokenize(string(fileContents))
+		lox.Tokenize(string(fileContents))
 	case "parse":
-		lox.parse(string(fileContents))
+		lox.Parse(string(fileContents))
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown command: %s\n", command)
 		os.Exit(1)
 	}
 
-	if lox.hadError {
+	if lox.HadError() {
 		os.Exit(65)
-	}
-}
-
-func (l *Lox) tokenize(source string) {
-	scanner := NewScanner(source)
-	tokens := scanner.scanTokens()
-
-	for _, token := range tokens {
-		fmt.Println(token)
-	}
-}
-
-func (l *Lox) parse(source string) {
-	scanner := NewScanner(source)
-	tokens := scanner.scanTokens()
-	parser := NewParser(tokens)
-
-	expr, err := parser.Parse()
-	if err != nil {
-		lox.parseError(err.token, err.message)
-		return
-	}
-
-	printer := &AstPrinter{}
-	fmt.Println(printer.Print(expr))
-}
-
-func (l *Lox) error(line int, message string) {
-	l.report(line, "", message)
-}
-
-func (l *Lox) report(line int, where string, message string) {
-	fmt.Fprintf(os.Stderr, "[line %d] Error%s: %s\n", line, where, message)
-	l.hadError = true
-}
-
-func (l *Lox) parseError(token Token, message string) {
-	if token.Type == EOF {
-		l.report(token.Line, " at end", message)
-	} else {
-		l.report(token.Line, " at '"+token.Lexeme+"'", message)
 	}
 }
