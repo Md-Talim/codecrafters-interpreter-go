@@ -17,13 +17,14 @@ func NewScanner(source string) *Scanner {
 	return &Scanner{source: []rune(source), line: 1}
 }
 
-func (s *Scanner) scanTokens() {
+func (s *Scanner) scanTokens() []*Token {
 	for !s.isAtEnd() {
 		s.start = s.current
 		s.scanToken()
 	}
 
 	s.tokens = append(s.tokens, &Token{Type: EOF, Lexeme: "", Literal: nil, Line: s.line})
+	return s.tokens
 }
 
 func (s *Scanner) scanToken() {

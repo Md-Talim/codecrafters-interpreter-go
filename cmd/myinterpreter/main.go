@@ -43,17 +43,17 @@ func main() {
 
 func (l *Lox) tokenize(source string) {
 	scanner := NewScanner(source)
-	scanner.scanTokens()
+	tokens := scanner.scanTokens()
 
-	for _, token := range scanner.tokens {
+	for _, token := range tokens {
 		fmt.Println(token)
 	}
 }
 
 func (l *Lox) parse(source string) {
 	scanner := NewScanner(source)
-	scanner.scanTokens()
-	parser := NewParser(scanner.tokens)
+	tokens := scanner.scanTokens()
+	parser := NewParser(tokens)
 
 	expr, err := parser.Parse()
 	if err != nil {
