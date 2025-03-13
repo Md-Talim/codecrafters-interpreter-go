@@ -1,29 +1,34 @@
-package main
+package scanner
 
 import (
 	"fmt"
-	"strconv"
+
+	"codecrafters-interpreter-go/internal/ast"
 )
 
+type ErrorHandler func(line int, message string)
+
 type Scanner struct {
-	source  []rune
-	tokens  []*Token
-	start   int // points to the first character in the lexeme being scanned
-	current int // points at the character currently being considered
-	line    int // tracks what source line 'current' is on
+	source       []rune
+	tokens       []*ast.Token
+	start        int // points to the first character in the lexeme being scanned
+	current      int // points at the character currently being considered
+	line         int // tracks what source line 'current' is on
+	errorHandler ErrorHandler
 }
 
-func NewScanner(source string) *Scanner {
-	return &Scanner{source: []rune(source), line: 1}
+func NewScanner(source string, errorHandler ErrorHandler) *Scanner {
+	return &Scanner{source: []rune(source), line: 1, errorHandler: errorHandler}
 }
 
-func (s *Scanner) scanTokens() {
+func (s *Scanner) ScanTokens() []*ast.Token {
 	for !s.isAtEnd() {
 		s.start = s.current
 		s.scanToken()
 	}
 
-	s.tokens = append(s.tokens, &Token{Type: EOF, Lexeme: "", Literal: nil, Line: s.line})
+	s.tokens = append(s.tokens, &ast.Token{Type: ast.EofToken, Lexeme: "", Literal: nil, Line: s.line})
+	return s.tokens
 }
 
 func (s *Scanner) scanToken() {
@@ -31,49 +36,49 @@ func (s *Scanner) scanToken() {
 	switch c {
 	// single-character tokens
 	case '(':
-		s.addToken(LEFT_PAREN)
+		s.addToken(ast.LeftParenToken)
 	case ')':
-		s.addToken(RIGHT_PAREN)
+		s.addToken(ast.RightParenToken)
 	case '{':
-		s.addToken(LEFT_BRACE)
+		s.addToken(ast.LeftBraceToken)
 	case '}':
-		s.addToken(RIGHT_BRACE)
+		s.addToken(ast.RightBraceToken)
 	case ',':
-		s.addToken(COMMA)
+		s.addToken(ast.CommaToken)
 	case '.':
-		s.addToken(DOT)
+		s.addToken(ast.DotToken)
 	case '-':
-		s.addToken(MINUS)
+		s.addToken(ast.MinusToken)
 	case '+':
-		s.addToken(PLUS)
+		s.addToken(ast.PlusToken)
 	case ';':
-		s.addToken(SEMICOLON)
+		s.addToken(ast.SemicolonToken)
 	case '*':
-		s.addToken(STAR)
+		s.addToken(ast.StarToken)
 	// operators
 	case '!':
 		if s.match('=') {
-			s.addToken(BANG_EQUAL)
+			s.addToken(ast.BangEqualToken)
 		} else {
-			s.addToken(BANG)
+			s.addToken(ast.BangToken)
 		}
 	case '=':
 		if s.match('=') {
-			s.addToken(EQUAL_EQUAL)
+			s.addToken(ast.EqualEqualToken)
 		} else {
-			s.addToken(EQUAL)
+			s.addToken(ast.EqualToken)
 		}
 	case '<':
 		if s.match('=') {
-			s.addToken(LESS_EQUAL)
+			s.addToken(ast.LessEqualToken)
 		} else {
-			s.addToken(LESS)
+			s.addToken(ast.LessToken)
 		}
 	case '>':
 		if s.match('=') {
-			s.addToken(GREATER_EQUAL)
+			s.addToken(ast.GreaterEqualToken)
 		} else {
-			s.addToken(GREATER)
+			s.addToken(ast.GreaterToken)
 		}
 	case '/':
 		if s.match('/') {
@@ -81,7 +86,7 @@ func (s *Scanner) scanToken() {
 				s.advance()
 			}
 		} else {
-			s.addToken(SLASH)
+			s.addToken(ast.SlashToken)
 		}
 	// skip over other meaningless characters: newlines and whitespace
 	case ' ', '\r', '\t':
@@ -96,7 +101,7 @@ func (s *Scanner) scanToken() {
 		} else if isAlpha(c) {
 			s.scanIdentifier()
 		} else {
-			lox.error(s.line, fmt.Sprintf("Unexpected character: %c", c))
+			s.errorHandler(s.line, fmt.Sprintf("Unexpected character: %c", c))
 		}
 	}
 }
@@ -110,7 +115,7 @@ func (s *Scanner) scanString() {
 	}
 
 	if s.isAtEnd() {
-		lox.error(s.line, "Unterminated string.")
+		s.errorHandler(s.line, "Unterminated string.")
 		return
 	}
 
@@ -119,7 +124,7 @@ func (s *Scanner) scanString() {
 
 	// trim the surrounding quotes
 	value := string(s.source[s.start+1 : s.current-1])
-	s.addTokenWithLiteral(STRING, value)
+	s.addTokenWithLiteral(ast.StringToken, value)
 }
 
 func (s *Scanner) scanNumber() {
@@ -141,11 +146,11 @@ func (s *Scanner) scanNumber() {
 	text := string(s.source[s.start:s.current])
 	num, err := formatFloat(text)
 	if err != nil {
-		lox.error(s.line, "Invalid number literal.")
+		s.errorHandler(s.line, "Invalid number literal.")
 		return
 	}
 
-	s.addTokenWithLiteral(NUMBER, num)
+	s.addTokenWithLiteral(ast.NumberToken, num)
 }
 
 func (s *Scanner) scanIdentifier() {
@@ -154,9 +159,9 @@ func (s *Scanner) scanIdentifier() {
 	}
 
 	text := string(s.source[s.start:s.current])
-	tokenType, ok := keywords[text]
+	tokenType, ok := ast.Keywords[text]
 	if !ok {
-		tokenType = IDENTIFIER
+		tokenType = ast.IdentifierToken
 	}
 	s.addToken(tokenType)
 }
@@ -197,36 +202,11 @@ func (s *Scanner) advance() rune {
 	return token
 }
 
-func (s *Scanner) addToken(t TokenType) {
+func (s *Scanner) addToken(t ast.TokenType) {
 	s.addTokenWithLiteral(t, nil)
 }
 
-func (s *Scanner) addTokenWithLiteral(t TokenType, literal any) {
+func (s *Scanner) addTokenWithLiteral(t ast.TokenType, literal any) {
 	text := string(s.source[s.start:s.current])
-	s.tokens = append(s.tokens, &Token{Type: t, Lexeme: text, Literal: literal, Line: s.line})
-}
-
-func isAlpha(c rune) bool {
-	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'
-}
-
-func isAlphaNumeric(c rune) bool {
-	return isAlpha(c) || isDigit(c)
-}
-
-func isDigit(c rune) bool {
-	return c >= '0' && c <= '9'
-}
-
-func formatFloat(text string) (string, error) {
-	num, err := strconv.ParseFloat(text, 64)
-	if err != nil {
-		return "", err
-	}
-
-	// check if number is effectively an integer
-	if num == float64(int(num)) {
-		return fmt.Sprintf("%.1f", num), nil
-	}
-	return fmt.Sprintf("%g", num), nil
+	s.tokens = append(s.tokens, &ast.Token{Type: t, Lexeme: text, Literal: literal, Line: s.line})
 }
