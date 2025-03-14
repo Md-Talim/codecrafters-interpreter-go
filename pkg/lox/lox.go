@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"codecrafters-interpreter-go/internal/ast"
+	"codecrafters-interpreter-go/internal/interpreter"
 	"codecrafters-interpreter-go/internal/parser"
 	"codecrafters-interpreter-go/internal/scanner"
 )
@@ -35,6 +36,21 @@ func (l *Lox) Parse(source string) {
 
 	printer := &ast.AstPrinter{}
 	fmt.Println(printer.Print(expr))
+}
+
+func (l *Lox) Evaluate(source string) {
+	scanner := scanner.NewScanner(source, l.error)
+	tokens := scanner.ScanTokens()
+
+	parser := parser.NewParser[any](tokens)
+	expr, err := parser.Parse()
+	if err != nil {
+		l.parseError(err.Token(), err.Error())
+		return
+	}
+
+	interpreter := &interpreter.Interpreter{}
+	interpreter.Interpret(expr)
 }
 
 func (l *Lox) HadError() bool {
