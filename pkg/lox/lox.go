@@ -25,7 +25,7 @@ func (l *Lox) Tokenize(source string) {
 func (l *Lox) Parse(source string) {
 	scanner := scanner.NewScanner(source, l.error)
 	tokens := scanner.ScanTokens()
-	parser := parser.NewParser(tokens)
+	parser := parser.NewParser[string](tokens)
 
 	expr, err := parser.Parse()
 	if err != nil {
