@@ -17,26 +17,33 @@ func (i *Interpreter) VisitBinaryExpr(expr *ast.Binary[any]) any {
 	left := i.evaluate(expr.Left)
 	right := i.evaluate(expr.Right)
 
+	var leftd float64
+	var rightd float64
+	var err error
+	var ok bool
+
+	if leftd, ok = left.(float64); !ok {
+		leftd, err = strconv.ParseFloat(left.(string), 64)
+		if err != nil {
+			return nil
+		}
+	}
+
+	if rightd, ok = right.(float64); !ok {
+		rightd, err = strconv.ParseFloat(right.(string), 64)
+		if err != nil {
+			return nil
+		}
+	}
+
 	switch expr.Operator.Type {
+	case ast.MinusToken:
+		return fmt.Sprintf("%g", leftd-rightd)
+	case ast.PlusToken:
+		return fmt.Sprintf("%g", leftd+rightd)
 	case ast.StarToken:
-		leftd, err := strconv.ParseFloat(left.(string), 64)
-		if err != nil {
-			return nil
-		}
-		rightd, err := strconv.ParseFloat(right.(string), 64)
-		if err != nil {
-			return nil
-		}
 		return fmt.Sprintf("%g", leftd*rightd)
 	case ast.SlashToken:
-		leftd, err := strconv.ParseFloat(left.(string), 64)
-		if err != nil {
-			return nil
-		}
-		rightd, err := strconv.ParseFloat(right.(string), 64)
-		if err != nil {
-			return nil
-		}
 		return fmt.Sprintf("%g", leftd/rightd)
 	}
 
