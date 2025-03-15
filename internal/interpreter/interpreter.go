@@ -3,6 +3,7 @@ package interpreter
 import (
 	"codecrafters-interpreter-go/internal/ast"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -17,7 +18,21 @@ func (i *Interpreter) VisitBinaryExpr(expr *ast.Binary[any]) any {
 }
 
 func (i *Interpreter) VisitUnaryExpr(expr *ast.Unary[any]) any {
-	return ""
+	right := i.evaluate(expr.Right)
+
+	switch expr.Operator.Type {
+	case ast.BangToken:
+		return !isTruthy(right)
+	case ast.MinusToken:
+		i, err := strconv.ParseFloat(right.(string), 64)
+		if err != nil {
+			return nil
+		}
+		return -i
+	}
+
+	// Unreachable code
+	return nil
 }
 
 func (i *Interpreter) VisitLiteralExpr(expr *ast.Literal[any]) any {
@@ -31,6 +46,18 @@ func (i *Interpreter) Interpret(expr ast.Expr[any]) {
 
 func (i *Interpreter) evaluate(expr ast.Expr[any]) any {
 	return expr.Accept(i)
+}
+
+func isTruthy(object any) bool {
+	if object == nil {
+		return false
+	}
+	switch v := object.(type) {
+	case bool:
+		return v
+	default:
+		return true
+	}
 }
 
 func (i *Interpreter) stringify(value any) string {
