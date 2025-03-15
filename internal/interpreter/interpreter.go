@@ -14,7 +14,33 @@ func (i *Interpreter) VisitGroupingExpr(expr *ast.Grouping[any]) any {
 }
 
 func (i *Interpreter) VisitBinaryExpr(expr *ast.Binary[any]) any {
-	return ""
+	left := i.evaluate(expr.Left)
+	right := i.evaluate(expr.Right)
+
+	switch expr.Operator.Type {
+	case ast.StarToken:
+		leftd, err := strconv.ParseFloat(left.(string), 64)
+		if err != nil {
+			return nil
+		}
+		rightd, err := strconv.ParseFloat(right.(string), 64)
+		if err != nil {
+			return nil
+		}
+		return fmt.Sprintf("%g", leftd*rightd)
+	case ast.SlashToken:
+		leftd, err := strconv.ParseFloat(left.(string), 64)
+		if err != nil {
+			return nil
+		}
+		rightd, err := strconv.ParseFloat(right.(string), 64)
+		if err != nil {
+			return nil
+		}
+		return fmt.Sprintf("%g", leftd/rightd)
+	}
+
+	return nil
 }
 
 func (i *Interpreter) VisitUnaryExpr(expr *ast.Unary[any]) any {
