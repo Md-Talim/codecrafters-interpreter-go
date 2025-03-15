@@ -3,6 +3,7 @@ package interpreter
 import (
 	"codecrafters-interpreter-go/internal/ast"
 	"fmt"
+	"strings"
 )
 
 type Interpreter struct{}
@@ -36,12 +37,19 @@ func (i *Interpreter) stringify(value any) string {
 	if value == nil {
 		return "nil"
 	}
+
 	switch v := value.(type) {
 	case float64:
 		if v == float64(int(v)) {
-			return fmt.Sprintf("%.0f", v)
+			return fmt.Sprintf("%d", int(v))
 		}
-		return fmt.Sprintf("%v", v)
+		return fmt.Sprintf("%g", v)
+	case string:
+		if strings.HasSuffix(v, ".0") {
+			return v[:len(v)-2]
+		}
+		return v
+	default:
+		return fmt.Sprintf("%v", value)
 	}
-	return fmt.Sprintf("%v", value)
 }
