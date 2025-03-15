@@ -13,17 +13,6 @@ func (i *Interpreter) VisitGroupingExpr(expr *ast.Grouping[any]) any {
 	return i.evaluate(expr.Expression)
 }
 
-func toFloat64(val any) (float64, bool) {
-	if num, ok := val.(float64); ok {
-		return num, ok
-	}
-	if str, ok := val.(string); ok {
-		num, err := strconv.ParseFloat(str, 64)
-		return num, err == nil
-	}
-	return 0, false
-}
-
 func (i *Interpreter) VisitBinaryExpr(expr *ast.Binary[any]) any {
 	left := i.evaluate(expr.Left)
 	right := i.evaluate(expr.Right)
@@ -92,18 +81,6 @@ func (i *Interpreter) Interpret(expr ast.Expr[any]) {
 
 func (i *Interpreter) evaluate(expr ast.Expr[any]) any {
 	return expr.Accept(i)
-}
-
-func isTruthy(object any) bool {
-	if object == nil {
-		return false
-	}
-	switch v := object.(type) {
-	case bool:
-		return v
-	default:
-		return true
-	}
 }
 
 func (i *Interpreter) stringify(value any) string {
