@@ -9,7 +9,7 @@ import (
 type Interpreter struct{}
 
 func (i *Interpreter) VisitGroupingExpr(expr *ast.Grouping[any]) any {
-	return ""
+	return i.evaluate(expr.Expression)
 }
 
 func (i *Interpreter) VisitBinaryExpr(expr *ast.Binary[any]) any {
