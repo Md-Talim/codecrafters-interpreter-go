@@ -39,6 +39,14 @@ func (i *Interpreter) VisitBinaryExpr(expr *ast.Binary[any]) any {
 	}
 
 	switch expr.Operator.Type {
+	case ast.LessToken:
+		return leftNum < rightNum
+	case ast.LessEqualToken:
+		return leftNum <= rightNum
+	case ast.GreaterToken:
+		return leftNum > rightNum
+	case ast.GreaterEqualToken:
+		return leftNum >= rightNum
 	case ast.MinusToken:
 		return leftNum - rightNum
 	case ast.PlusToken:
