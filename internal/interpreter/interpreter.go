@@ -13,38 +13,51 @@ func (i *Interpreter) VisitGroupingExpr(expr *ast.Grouping[any]) any {
 	return i.evaluate(expr.Expression)
 }
 
+func toFloat64(val any) (float64, bool) {
+	if num, ok := val.(float64); ok {
+		return num, ok
+	}
+	if str, ok := val.(string); ok {
+		num, err := strconv.ParseFloat(str, 64)
+		return num, err == nil
+	}
+	return 0, false
+}
+
 func (i *Interpreter) VisitBinaryExpr(expr *ast.Binary[any]) any {
 	left := i.evaluate(expr.Left)
 	right := i.evaluate(expr.Right)
 
-	var leftd float64
-	var rightd float64
-	var err error
-	var ok bool
+	// Check if both operands are strings
+	leftStr, leftIsString := left.(string)
+	rightStr, rightIsString := right.(string)
 
-	if leftd, ok = left.(float64); !ok {
-		leftd, err = strconv.ParseFloat(left.(string), 64)
-		if err != nil {
-			return nil
+	if (expr.Operator.Type == ast.PlusToken) && leftIsString && rightIsString {
+		leftNum, leftNumErr := strconv.ParseFloat(leftStr, 64)
+		rightNum, rightNumErr := strconv.ParseFloat(rightStr, 64)
+
+		if leftNumErr == nil && rightNumErr == nil {
+			return leftNum + rightNum
 		}
+		return leftStr + rightStr
 	}
 
-	if rightd, ok = right.(float64); !ok {
-		rightd, err = strconv.ParseFloat(right.(string), 64)
-		if err != nil {
-			return nil
-		}
+	leftNum, leftOk := toFloat64(left)
+	rightNum, rightOk := toFloat64(right)
+
+	if !leftOk || !rightOk {
+		return nil
 	}
 
 	switch expr.Operator.Type {
 	case ast.MinusToken:
-		return fmt.Sprintf("%g", leftd-rightd)
+		return leftNum - rightNum
 	case ast.PlusToken:
-		return fmt.Sprintf("%g", leftd+rightd)
+		return leftNum + rightNum
 	case ast.StarToken:
-		return fmt.Sprintf("%g", leftd*rightd)
+		return leftNum * rightNum
 	case ast.SlashToken:
-		return fmt.Sprintf("%g", leftd/rightd)
+		return leftNum / rightNum
 	}
 
 	return nil
@@ -57,8 +70,8 @@ func (i *Interpreter) VisitUnaryExpr(expr *ast.Unary[any]) any {
 	case ast.BangToken:
 		return !isTruthy(right)
 	case ast.MinusToken:
-		i, err := strconv.ParseFloat(right.(string), 64)
-		if err != nil {
+		i, ok := toFloat64(right)
+		if !ok {
 			return nil
 		}
 		return -i
