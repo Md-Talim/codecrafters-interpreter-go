@@ -31,9 +31,6 @@ func (i *Interpreter) VisitBinaryExpr(expr *ast.Binary[any]) any {
 		return leftStr + rightStr
 	}
 
-	leftNum, leftOk := toFloat64(left)
-	rightNum, rightOk := toFloat64(right)
-
 	if expr.Operator.Type == ast.EqualEqualToken || expr.Operator.Type == ast.BangEqualToken {
 		// Ensure both operands are of the same type
 		if fmt.Sprintf("%T", left) != fmt.Sprintf("%T", right) {
@@ -46,13 +43,11 @@ func (i *Interpreter) VisitBinaryExpr(expr *ast.Binary[any]) any {
 		return !isEqual(left, right)
 	}
 
+	leftNum, leftOk := toFloat64(left)
+	rightNum, rightOk := toFloat64(right)
+
 	if !leftOk || !rightOk {
-		switch expr.Operator.Type {
-		case ast.EqualEqualToken:
-			return isEqual(left, right)
-		case ast.BangEqualToken:
-			return !isEqual(left, right)
-		}
+		throwRuntimeError(expr.Operator, "Operands must be numbers.")
 	}
 
 	switch expr.Operator.Type {
