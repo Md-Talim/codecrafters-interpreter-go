@@ -90,12 +90,11 @@ func (i *Interpreter) VisitUnaryExpr(expr *ast.Unary[any]) any {
 	case ast.MinusToken:
 		i, ok := toFloat64(right)
 		if !ok {
-			return nil
+			throwRuntimeError(expr.Operator, "Runtime Error: Operand must be a number.")
 		}
 		return -i
 	}
 
-	// Unreachable code
 	return nil
 }
 

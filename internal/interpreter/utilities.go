@@ -1,6 +1,9 @@
 package interpreter
 
 import (
+	"codecrafters-interpreter-go/internal/ast"
+	"fmt"
+	"os"
 	"reflect"
 	"strconv"
 )
@@ -51,4 +54,20 @@ func isEqual(a any, b any) bool {
 	}
 
 	return reflect.DeepEqual(a, b)
+}
+
+// throwRuntimeError logs a runtime error message to the standard error output
+// along with the line number where the error occurred, and then terminates
+// the program with an exit code of 70.
+//
+// Parameters:
+//   - token: An ast.Token representing the source code token where the error occurred.
+//     The token's Line field is used to indicate the line number.
+//   - message: A string containing the error message to be displayed.
+//
+// This function is typically used to handle unrecoverable runtime errors in
+// the interpreter.
+func throwRuntimeError(token ast.Token, message string) {
+	fmt.Fprintf(os.Stderr, "%s \n[line %d]\n", message, token.Line)
+	os.Exit(70)
 }
