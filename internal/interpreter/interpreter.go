@@ -34,11 +34,32 @@ func (i *Interpreter) VisitBinaryExpr(expr *ast.Binary[any]) any {
 	leftNum, leftOk := toFloat64(left)
 	rightNum, rightOk := toFloat64(right)
 
+	if expr.Operator.Type == ast.EqualEqualToken || expr.Operator.Type == ast.BangEqualToken {
+		// Ensure both operands are of the same type
+		if fmt.Sprintf("%T", left) != fmt.Sprintf("%T", right) {
+			return (expr.Operator.Type == ast.EqualEqualToken)
+		}
+
+		if expr.Operator.Type == ast.EqualEqualToken {
+			return isEqual(left, right)
+		}
+		return !isEqual(left, right)
+	}
+
 	if !leftOk || !rightOk {
-		return nil
+		switch expr.Operator.Type {
+		case ast.EqualEqualToken:
+			return isEqual(left, right)
+		case ast.BangEqualToken:
+			return !isEqual(left, right)
+		}
 	}
 
 	switch expr.Operator.Type {
+	case ast.EqualEqualToken:
+		return leftNum == rightNum
+	case ast.BangEqualToken:
+		return leftNum != rightNum
 	case ast.LessToken:
 		return leftNum < rightNum
 	case ast.LessEqualToken:

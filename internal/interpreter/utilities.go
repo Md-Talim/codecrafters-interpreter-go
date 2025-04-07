@@ -1,6 +1,9 @@
 package interpreter
 
-import "strconv"
+import (
+	"reflect"
+	"strconv"
+)
 
 // toFloat64 converts a value of any type to a float64 if possible.
 // It returns the converted float64 value and a boolean indicating success.
@@ -27,4 +30,25 @@ func isTruthy(object any) bool {
 	default:
 		return true
 	}
+}
+
+// isEqual compares two values of any type and determines if they are deeply equal.
+// It returns true if both values are nil or if they are deeply equal according to reflect.DeepEqual.
+// If one value is nil and the other is not, it returns false.
+//
+// Parameters:
+//   - a: The first value to compare.
+//   - b: The second value to compare.
+//
+// Returns:
+//   - bool: True if the values are deeply equal, false otherwise.
+func isEqual(a any, b any) bool {
+	if a == nil && b == nil {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+
+	return reflect.DeepEqual(a, b)
 }
