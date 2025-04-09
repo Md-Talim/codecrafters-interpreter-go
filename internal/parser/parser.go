@@ -1,49 +1,53 @@
 package parser
 
 import (
+	"fmt"
+	"os"
 	"slices"
+	"strconv"
+	"strings"
 
 	"codecrafters-interpreter-go/internal/ast"
+	"codecrafters-interpreter-go/internal/scanner"
+	"codecrafters-interpreter-go/pkg/loxerrors"
 )
 
-type Parser[R any] struct {
+type Parser struct {
 	tokens  []*ast.Token
 	current int
 }
 
-type ParseError struct {
-	token   ast.Token
-	message string
+func NewParser(source string) *Parser {
+	scanner := scanner.NewScanner(source)
+	tokens, err := scanner.ScanTokens()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(65)
+	}
+	return &Parser{tokens: tokens}
 }
 
-func (e *ParseError) Error() string {
-	return e.message
+func (p *Parser) error(token ast.Token, message string) error {
+	return loxerrors.NewParseError(token.Line, message)
 }
 
-func (e *ParseError) Token() ast.Token {
-	return e.token
-}
-
-func NewParser[R any](tokens []*ast.Token) *Parser[R] {
-	return &Parser[R]{tokens: tokens}
-}
-
-func (p *Parser[R]) error(token ast.Token, message string) *ParseError {
-	return &ParseError{token: token, message: message}
-}
-
-func (p *Parser[R]) primary() (ast.Expr[R], *ParseError) {
+func (p *Parser) primary() (ast.Expr, error) {
 	if p.match(ast.TrueKeyword) {
-		return &ast.Literal[R]{Value: true}, nil
+		return ast.NewBooleanExpr(true), nil
 	}
 	if p.match(ast.FalseKeyword) {
-		return &ast.Literal[R]{Value: false}, nil
+		return ast.NewBooleanExpr(false), nil
 	}
 	if p.match(ast.NilKeyword) {
-		return &ast.Literal[R]{Value: nil}, nil
+		return ast.NewNilExpr(), nil
 	}
-	if p.match(ast.StringToken, ast.NumberToken) {
-		return &ast.Literal[R]{Value: p.previous().Literal}, nil
+	if p.match(ast.StringToken) {
+		value := strings.Trim(p.previous().Lexeme, "\"")
+		return ast.NewStringExpr(value), nil
+	}
+	if p.match(ast.NumberToken) {
+		value, _ := strconv.ParseFloat(p.previous().Lexeme, 64)
+		return ast.NewNumberExpr(value), nil
 	}
 
 	if p.match(ast.LeftParenToken) {
@@ -55,24 +59,24 @@ func (p *Parser[R]) primary() (ast.Expr[R], *ParseError) {
 		if err != nil {
 			return nil, err
 		}
-		return &ast.Grouping[R]{Expression: expr}, nil
+		return ast.NewGroupingExpr(expr), nil
 	}
 	return nil, p.error(p.peek(), "Expect expression.")
 }
 
-func (p *Parser[R]) unary() (ast.Expr[R], *ParseError) {
+func (p *Parser) unary() (ast.Expr, error) {
 	if p.match(ast.BangToken, ast.MinusToken) {
 		operator := p.previous()
 		right, err := p.unary()
 		if err != nil {
 			return nil, err
 		}
-		return &ast.Unary[R]{Operator: operator, Right: right}, nil
+		return ast.NewUnaryExpr(operator, right), nil
 	}
 	return p.primary()
 }
 
-func (p *Parser[R]) factor() (ast.Expr[R], *ParseError) {
+func (p *Parser) factor() (ast.Expr, error) {
 	expr, err := p.unary()
 	if err != nil {
 		return nil, err
@@ -84,13 +88,13 @@ func (p *Parser[R]) factor() (ast.Expr[R], *ParseError) {
 		if err != nil {
 			return nil, err
 		}
-		expr = &ast.Binary[R]{Left: expr, Operator: operator, Right: right}
+		expr = ast.NewBinaryExpr(operator, expr, right)
 	}
 
 	return expr, nil
 }
 
-func (p *Parser[R]) term() (ast.Expr[R], *ParseError) {
+func (p *Parser) term() (ast.Expr, error) {
 	expr, err := p.factor()
 	if err != nil {
 		return nil, err
@@ -102,13 +106,13 @@ func (p *Parser[R]) term() (ast.Expr[R], *ParseError) {
 		if err != nil {
 			return nil, err
 		}
-		expr = &ast.Binary[R]{Left: expr, Operator: operator, Right: right}
+		expr = ast.NewBinaryExpr(operator, expr, right)
 	}
 
 	return expr, nil
 }
 
-func (p *Parser[R]) comparison() (ast.Expr[R], *ParseError) {
+func (p *Parser) comparison() (ast.Expr, error) {
 	expr, err := p.term()
 	if err != nil {
 		return nil, err
@@ -120,13 +124,13 @@ func (p *Parser[R]) comparison() (ast.Expr[R], *ParseError) {
 		if err != nil {
 			return nil, err
 		}
-		expr = &ast.Binary[R]{Left: expr, Operator: operator, Right: right}
+		expr = ast.NewBinaryExpr(operator, expr, right)
 	}
 
 	return expr, nil
 }
 
-func (p *Parser[R]) equality() (ast.Expr[R], *ParseError) {
+func (p *Parser) equality() (ast.Expr, error) {
 	expr, err := p.comparison()
 	if err != nil {
 		return nil, err
@@ -138,17 +142,17 @@ func (p *Parser[R]) equality() (ast.Expr[R], *ParseError) {
 		if err != nil {
 			return nil, err
 		}
-		expr = &ast.Binary[R]{Left: expr, Operator: operator, Right: right}
+		expr = ast.NewBinaryExpr(operator, expr, right)
 	}
 
 	return expr, nil
 }
 
-func (p *Parser[R]) expression() (ast.Expr[R], *ParseError) {
+func (p *Parser) expression() (ast.Expr, error) {
 	return p.equality()
 }
 
-func (p *Parser[R]) Parse() (ast.Expr[R], *ParseError) {
+func (p *Parser) Parse() (ast.Expr, error) {
 	expr, err := p.expression()
 	if err != nil {
 		return nil, err
@@ -156,33 +160,33 @@ func (p *Parser[R]) Parse() (ast.Expr[R], *ParseError) {
 	return expr, nil
 }
 
-func (p *Parser[R]) peek() ast.Token {
+func (p *Parser) peek() ast.Token {
 	return *p.tokens[p.current]
 }
 
-func (p *Parser[R]) isAtEnd() bool {
+func (p *Parser) isAtEnd() bool {
 	return p.peek().Type == ast.EofToken
 }
 
-func (p *Parser[R]) previous() ast.Token {
+func (p *Parser) previous() ast.Token {
 	return *p.tokens[p.current-1]
 }
 
-func (p *Parser[R]) advance() ast.Token {
+func (p *Parser) advance() ast.Token {
 	if !p.isAtEnd() {
 		p.current++
 	}
 	return p.previous()
 }
 
-func (p *Parser[R]) check(t ast.TokenType) bool {
+func (p *Parser) check(t ast.TokenType) bool {
 	if p.isAtEnd() {
 		return false
 	}
 	return p.peek().Type == t
 }
 
-func (p *Parser[R]) match(types ...ast.TokenType) bool {
+func (p *Parser) match(types ...ast.TokenType) bool {
 	if slices.ContainsFunc(types, p.check) {
 		p.advance()
 		return true
@@ -190,7 +194,7 @@ func (p *Parser[R]) match(types ...ast.TokenType) bool {
 	return false
 }
 
-func (p *Parser[R]) consume(t ast.TokenType, message string) (ast.Token, *ParseError) {
+func (p *Parser) consume(t ast.TokenType, message string) (ast.Token, error) {
 	if p.check(t) {
 		return p.advance(), nil
 	}
