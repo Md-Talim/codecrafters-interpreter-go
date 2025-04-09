@@ -15,8 +15,6 @@ func main() {
 
 	command := os.Args[1]
 
-	lox := lox.Lox{}
-
 	filename := os.Args[2]
 	fileContents, err := os.ReadFile(filename)
 	if err != nil {
@@ -34,9 +32,5 @@ func main() {
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown command: %s\n", command)
 		os.Exit(1)
-	}
-
-	if lox.HadError() {
-		os.Exit(65)
 	}
 }

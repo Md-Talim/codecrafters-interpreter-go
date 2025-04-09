@@ -4,34 +4,36 @@ import (
 	"fmt"
 
 	"codecrafters-interpreter-go/internal/ast"
+	"codecrafters-interpreter-go/pkg/loxerrors"
 )
 
 type ErrorHandler func(line int, message string)
 
 type Scanner struct {
-	source       []rune
-	tokens       []*ast.Token
-	start        int // points to the first character in the lexeme being scanned
-	current      int // points at the character currently being considered
-	line         int // tracks what source line 'current' is on
-	errorHandler ErrorHandler
+	source  []rune
+	tokens  []*ast.Token
+	start   int // points to the first character in the lexeme being scanned
+	current int // points at the character currently being considered
+	line    int // tracks what source line 'current' is on
 }
 
-func NewScanner(source string, errorHandler ErrorHandler) *Scanner {
-	return &Scanner{source: []rune(source), line: 1, errorHandler: errorHandler}
+func NewScanner(source string) *Scanner {
+	return &Scanner{source: []rune(source), line: 1}
 }
 
-func (s *Scanner) ScanTokens() []*ast.Token {
+func (s *Scanner) ScanTokens() ([]*ast.Token, error) {
 	for !s.isAtEnd() {
 		s.start = s.current
-		s.scanToken()
+		if err := s.scanToken(); err != nil {
+			return nil, err
+		}
 	}
 
 	s.tokens = append(s.tokens, &ast.Token{Type: ast.EofToken, Lexeme: "", Literal: nil, Line: s.line})
-	return s.tokens
+	return s.tokens, nil
 }
 
-func (s *Scanner) scanToken() {
+func (s *Scanner) scanToken() error {
 	c := s.advance()
 	switch c {
 	// single-character tokens
@@ -101,9 +103,11 @@ func (s *Scanner) scanToken() {
 		} else if isAlpha(c) {
 			s.scanIdentifier()
 		} else {
-			s.errorHandler(s.line, fmt.Sprintf("Unexpected character: %c", c))
+			return loxerrors.NewLexicalError(s.line, fmt.Sprintf("Unexpected character: %c", c))
 		}
 	}
+
+	return loxerrors.NewLexicalError(s.line, fmt.Sprintf("Unexpected character: %c", c))
 }
 
 func (s *Scanner) scanString() {
@@ -115,7 +119,7 @@ func (s *Scanner) scanString() {
 	}
 
 	if s.isAtEnd() {
-		s.errorHandler(s.line, "Unterminated string.")
+		loxerrors.NewLexicalError(s.line, "Unterminated string.")
 		return
 	}
 
@@ -146,7 +150,7 @@ func (s *Scanner) scanNumber() {
 	text := string(s.source[s.start:s.current])
 	num, err := formatFloat(text)
 	if err != nil {
-		s.errorHandler(s.line, "Invalid number literal.")
+		loxerrors.NewLexicalError(s.line, "Invalid number literal.")
 		return
 	}
 

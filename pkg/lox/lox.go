@@ -8,68 +8,46 @@ import (
 	"codecrafters-interpreter-go/internal/interpreter"
 	"codecrafters-interpreter-go/internal/parser"
 	"codecrafters-interpreter-go/internal/scanner"
+	"codecrafters-interpreter-go/pkg/loxerrors"
 )
 
-type Lox struct {
-	hadError bool
-}
-
-func (l *Lox) Tokenize(source string) {
-	scanner := scanner.NewScanner(source, l.error)
-	tokens := scanner.ScanTokens()
+func Tokenize(source string) {
+	scanner := scanner.NewScanner(source)
+	tokens, err := scanner.ScanTokens()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(65)
+	}
 
 	for _, token := range tokens {
 		fmt.Println(token)
 	}
 }
 
-func (l *Lox) Parse(source string) {
-	scanner := scanner.NewScanner(source, l.error)
-	tokens := scanner.ScanTokens()
-	parser := parser.NewParser[string](tokens)
+func Parse(source string) {
+	parser := parser.NewParser(source)
 
 	expr, err := parser.Parse()
 	if err != nil {
-		l.parseError(err.Token(), err.Error())
-		return
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(65)
 	}
 
-	printer := &ast.AstPrinter{}
-	fmt.Println(printer.Print(expr))
+	printer := ast.NewAstPrinter()
+	expr.Accept(printer)
 }
 
-func (l *Lox) Evaluate(source string) {
-	scanner := scanner.NewScanner(source, l.error)
-	tokens := scanner.ScanTokens()
-
-	parser := parser.NewParser[any](tokens)
-	expr, err := parser.Parse()
-	if err != nil {
-		l.parseError(err.Token(), err.Error())
-		return
-	}
-
+func Evaluate(source string) {
 	interpreter := &interpreter.Interpreter{}
-	interpreter.Interpret(expr)
-}
-
-func (l *Lox) HadError() bool {
-	return l.hadError
-}
-
-func (l *Lox) error(line int, message string) {
-	l.report(line, "", message)
-}
-
-func (l *Lox) parseError(token ast.Token, message string) {
-	if token.Type == ast.EofToken {
-		l.report(token.Line, " at end", message)
-	} else {
-		l.report(token.Line, " at '"+token.Lexeme+"'", message)
+	value, err := interpreter.Interpret(source)
+	if err != nil {
+		if loxErr, ok := err.(*loxerrors.LoxError); ok {
+			fmt.Fprintln(os.Stderr, loxErr)
+			if loxErr.Type == loxerrors.RuntimeError {
+				os.Exit(70)
+			}
+			os.Exit(65)
+		}
 	}
-}
-
-func (l *Lox) report(line int, where string, message string) {
-	fmt.Fprintf(os.Stderr, "[line %d] Error%s: %s\n", line, where, message)
-	l.hadError = true
+	fmt.Println(value)
 }
