@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"fmt"
 	"os"
 	"slices"
 	"strconv"
@@ -19,9 +18,8 @@ type Parser struct {
 
 func NewParser(source string) *Parser {
 	scanner := scanner.NewScanner(source)
-	tokens, err := scanner.ScanTokens()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+	tokens, hadError := scanner.ScanTokens()
+	if hadError {
 		os.Exit(65)
 	}
 	return &Parser{tokens: tokens}

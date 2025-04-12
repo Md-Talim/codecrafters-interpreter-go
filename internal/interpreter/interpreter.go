@@ -4,6 +4,8 @@ import (
 	"codecrafters-interpreter-go/internal/ast"
 	"codecrafters-interpreter-go/internal/parser"
 	"codecrafters-interpreter-go/pkg/loxerrors"
+	"fmt"
+	"os"
 )
 
 type Interpreter struct {
@@ -148,7 +150,8 @@ func (i *Interpreter) Interpret(source string) (ast.Value, error) {
 	parser := parser.NewParser(source)
 	expr, err := parser.Parse()
 	if err != nil {
-		return nil, err
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(65)
 	}
 
 	value, err := i.evaluate(expr)
