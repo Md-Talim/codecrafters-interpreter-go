@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"codecrafters-interpreter-go/internal/ast"
-	"codecrafters-interpreter-go/pkg/loxerrors"
 )
 
 type ErrorHandler func(line int, message string)
@@ -34,8 +33,7 @@ func (s *Scanner) ScanTokens() ([]*ast.Token, bool) {
 }
 
 func (s *Scanner) lexicalError(line int, message string) {
-	err := loxerrors.NewLexicalError(line, message)
-	fmt.Fprintln(os.Stderr, err)
+	fmt.Fprintf(os.Stderr, "[line %d] Error: %s\n", line, message)
 	s.hadError = true
 }
 

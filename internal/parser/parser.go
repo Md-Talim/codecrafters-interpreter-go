@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"errors"
+	"fmt"
 	"os"
 	"slices"
 	"strconv"
@@ -8,12 +10,12 @@ import (
 
 	"codecrafters-interpreter-go/internal/ast"
 	"codecrafters-interpreter-go/internal/scanner"
-	"codecrafters-interpreter-go/pkg/loxerrors"
 )
 
 type Parser struct {
-	tokens  []*ast.Token
-	current int
+	tokens      []*ast.Token
+	current     int
+	syntaxError bool
 }
 
 func NewParser(source string) *Parser {
@@ -22,11 +24,19 @@ func NewParser(source string) *Parser {
 	if hadError {
 		os.Exit(65)
 	}
-	return &Parser{tokens: tokens}
+	return &Parser{tokens: tokens, syntaxError: false}
 }
 
 func (p *Parser) error(token ast.Token, message string) error {
-	return loxerrors.NewParseError(token.Line, message)
+	var where string
+	if token.Type == ast.EofToken {
+		where = "at end"
+	} else {
+		where = fmt.Sprintf("at '%s' ", token.Lexeme)
+	}
+
+	text := fmt.Sprintf("[line %d] Error %s: %s", token.Line, where, message)
+	return errors.New(text)
 }
 
 func (p *Parser) primary() (ast.Expr, error) {

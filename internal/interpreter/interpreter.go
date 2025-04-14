@@ -3,7 +3,7 @@ package interpreter
 import (
 	"codecrafters-interpreter-go/internal/ast"
 	"codecrafters-interpreter-go/internal/parser"
-	"codecrafters-interpreter-go/pkg/loxerrors"
+	"errors"
 	"fmt"
 	"os"
 )
@@ -11,6 +11,11 @@ import (
 type Interpreter struct {
 	result       ast.Value
 	runtimeError error
+}
+
+func newRuntimeError(line int, message string) error {
+	text := fmt.Sprintf("%s\n[line %d]", message, line)
+	return errors.New(text)
 }
 
 func (i *Interpreter) VisitBinaryExpr(expr *ast.BinaryExpr) {
@@ -61,8 +66,7 @@ func (i *Interpreter) VisitBinaryExpr(expr *ast.BinaryExpr) {
 				i.result = ast.NewBooleanValue(leftNum <= rightNum)
 			}
 		} else {
-			i.runtimeError = loxerrors.NewRuntimeError(expr.Operator.Line, "Operands must be numbers.")
-			return
+			i.runtimeError = newRuntimeError(expr.Operator.Line, "Operands must be numbers.")
 		}
 	case ast.PlusToken:
 		if bothNums {
@@ -70,14 +74,14 @@ func (i *Interpreter) VisitBinaryExpr(expr *ast.BinaryExpr) {
 		} else if leftType == ast.StringType && rightType == ast.StringType {
 			i.result = ast.NewStringValue(left.(*ast.StringValue).Value + right.(*ast.StringValue).Value)
 		} else {
-			i.runtimeError = loxerrors.NewRuntimeError(expr.Operator.Line, "Operands must be two numbers or two strings.")
+			i.runtimeError = newRuntimeError(expr.Operator.Line, "Operands must be two numbers or two strings.")
 		}
 	case ast.EqualEqualToken:
 		i.result = ast.NewBooleanValue(left.IsEqualTo(right))
 	case ast.BangEqualToken:
 		i.result = ast.NewBooleanValue(!left.IsEqualTo(right))
 	default:
-		i.runtimeError = loxerrors.NewRuntimeError(expr.Operator.Line, "Unknown operator.")
+		i.runtimeError = newRuntimeError(expr.Operator.Line, "Unknown operator.")
 	}
 }
 
@@ -132,7 +136,7 @@ func (i *Interpreter) VisitUnaryExpr(expr *ast.UnaryExpr) {
 			i.runtimeError = nil
 		default:
 			i.result = nil
-			i.runtimeError = loxerrors.NewRuntimeError(expr.Operator.Line, "Operand must be a boolean, string, nil, or number.")
+			i.runtimeError = newRuntimeError(expr.Operator.Line, "Operand must be a boolean, string, nil, or number.")
 		}
 	case ast.MinusToken:
 		if right.GetType() == ast.NumberType {
@@ -141,7 +145,7 @@ func (i *Interpreter) VisitUnaryExpr(expr *ast.UnaryExpr) {
 			i.runtimeError = nil
 		} else {
 			i.result = nil
-			i.runtimeError = loxerrors.NewRuntimeError(expr.Operator.Line, "Operands must be numbers.")
+			i.runtimeError = newRuntimeError(expr.Operator.Line, "Operands must be numbers.")
 		}
 	}
 }
