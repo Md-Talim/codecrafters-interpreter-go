@@ -43,3 +43,8 @@ func Evaluate(source string) {
 	}
 	fmt.Println(value)
 }
+
+func Run(source string) {
+	interpreter := &interpreter.Interpreter{}
+	interpreter.Run(source)
+}

@@ -90,6 +90,10 @@ func (i *Interpreter) VisitBooleanExpr(expr *ast.BooleanExpr) {
 	i.runtimeError = nil
 }
 
+func (i *Interpreter) VisitExpressionStmt(stmt *ast.ExpressionStmt) {
+	i.evaluate(stmt.Expression)
+}
+
 func (i *Interpreter) VisitGroupingExpr(expr *ast.GroupingExpr) {
 	i.result, i.runtimeError = i.evaluate(expr.Expression)
 }
@@ -102,6 +106,12 @@ func (i *Interpreter) VisitNilExpr() {
 func (i *Interpreter) VisitNumberExpr(expr *ast.NumberExpr) {
 	i.result = ast.NewNumberValue(expr.Value)
 	i.runtimeError = nil
+}
+
+func (i *Interpreter) VisitPrintStmt(stmt *ast.PrintStmt) {
+	if value, err := i.evaluate(stmt.Expression); err == nil {
+		fmt.Println(value)
+	}
 }
 
 func (i *Interpreter) VisitStringExpr(expr *ast.StringExpr) {
@@ -163,6 +173,23 @@ func (i *Interpreter) Interpret(source string) (ast.Value, error) {
 		return nil, err
 	}
 	return value, err
+}
+
+func (i *Interpreter) Run(source string) {
+	parser := parser.NewParser(source)
+	statements, err := parser.GetStatements()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(65)
+	}
+
+	for _, stmt := range statements {
+		i.execute(stmt)
+	}
+}
+
+func (i *Interpreter) execute(stmt ast.Stmt) {
+	stmt.Accept(i)
 }
 
 func (i *Interpreter) evaluate(ast ast.AST) (ast.Value, error) {

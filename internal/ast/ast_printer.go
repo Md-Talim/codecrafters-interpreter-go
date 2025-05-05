@@ -23,6 +23,14 @@ func (ap *AstPrinter) VisitBooleanExpr(be *BooleanExpr) {
 	fmt.Printf("%t", be.Value)
 }
 
+func (ap *AstPrinter) VisitPrintStmt(ps *PrintStmt) {
+	fmt.Print(ps.Expression)
+}
+
+func (ap *AstPrinter) VisitExpressionStmt(ex *ExpressionStmt) {
+	fmt.Print(ex.Expression)
+}
+
 func (ap *AstPrinter) VisitNilExpr() {
 	fmt.Printf("nil")
 }

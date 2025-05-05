@@ -160,6 +160,52 @@ func (p *Parser) expression() (ast.Expr, error) {
 	return p.equality()
 }
 
+func (p *Parser) expressionStatement() (ast.Stmt, error) {
+	expr, err := p.expression()
+	if err != nil {
+		return nil, err
+	}
+	if _, err = p.consume(ast.SemicolonToken, "Expect ';' after expression."); err != nil {
+		return nil, err
+	}
+	return ast.NewExpressionStmt(expr), nil
+}
+
+func (p *Parser) printStatement() (ast.Stmt, error) {
+	value, err := p.expression()
+	if err != nil {
+		return nil, err
+	}
+	if _, err = p.consume(ast.SemicolonToken, "Expect ';' after expression."); err != nil {
+		return nil, err
+	}
+	return ast.NewPrintStmt(value), nil
+}
+
+func (p *Parser) statement() (ast.Stmt, error) {
+	if p.match(ast.PrintKeyword) {
+		statement, err := p.printStatement()
+		if err != nil {
+			return nil, err
+		}
+		return statement, nil
+	}
+
+	return p.expressionStatement()
+}
+
+func (p *Parser) GetStatements() ([]ast.Stmt, error) {
+	statements := []ast.Stmt{}
+	for !p.isAtEnd() {
+		statement, err := p.statement()
+		if err != nil {
+			return nil, err
+		}
+		statements = append(statements, statement)
+	}
+	return statements, nil
+}
+
 func (p *Parser) Parse() (ast.Expr, error) {
 	expr, err := p.expression()
 	if err != nil {

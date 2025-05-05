@@ -29,6 +29,8 @@ func main() {
 		lox.Parse(string(fileContents))
 	case "evaluate":
 		lox.Evaluate(string(fileContents))
+	case "run":
+		lox.Run(string(fileContents))
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown command: %s\n", command)
 		os.Exit(1)

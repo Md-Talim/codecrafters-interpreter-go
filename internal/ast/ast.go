@@ -4,6 +4,34 @@ type AST interface {
 	Accept(visitor AstVisitor)
 }
 
+type Stmt interface {
+	Accept(visitor AstVisitor)
+}
+
+type ExpressionStmt struct {
+	Expression AST
+}
+
+func NewExpressionStmt(expression AST) *ExpressionStmt {
+	return &ExpressionStmt{Expression: expression}
+}
+
+func (e *ExpressionStmt) Accept(visitor AstVisitor) {
+	visitor.VisitExpressionStmt(e)
+}
+
+type PrintStmt struct {
+	Expression AST
+}
+
+func NewPrintStmt(expression AST) *PrintStmt {
+	return &PrintStmt{Expression: expression}
+}
+
+func (p *PrintStmt) Accept(visitor AstVisitor) {
+	visitor.VisitPrintStmt(p)
+}
+
 type Expr interface {
 	AST
 }
@@ -11,9 +39,11 @@ type Expr interface {
 type AstVisitor interface {
 	VisitBinaryExpr(expr *BinaryExpr)
 	VisitBooleanExpr(expr *BooleanExpr)
+	VisitExpressionStmt(stmt *ExpressionStmt)
 	VisitGroupingExpr(expr *GroupingExpr)
 	VisitNilExpr()
 	VisitNumberExpr(expr *NumberExpr)
+	VisitPrintStmt(stmt *PrintStmt)
 	VisitStringExpr(expr *StringExpr)
 	VisitUnaryExpr(expr *UnaryExpr)
 }
