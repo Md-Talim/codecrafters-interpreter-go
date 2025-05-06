@@ -35,7 +35,7 @@ func Parse(source string) {
 }
 
 func Evaluate(source string) {
-	interpreter := &interpreter.Interpreter{}
+	interpreter := interpreter.NewInterpreter()
 	value, err := interpreter.Interpret(source)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -45,6 +45,6 @@ func Evaluate(source string) {
 }
 
 func Run(source string) {
-	interpreter := &interpreter.Interpreter{}
+	interpreter := interpreter.NewInterpreter()
 	interpreter.Run(source)
 }

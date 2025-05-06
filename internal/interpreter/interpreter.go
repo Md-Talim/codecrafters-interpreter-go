@@ -9,8 +9,14 @@ import (
 )
 
 type Interpreter struct {
+	environment  *Environment
 	result       ast.Value
 	runtimeError error
+}
+
+func NewInterpreter() *Interpreter {
+	environment := &Environment{values: make(map[string]ast.Value)}
+	return &Interpreter{environment: environment}
 }
 
 func newRuntimeError(line int, message string) error {
@@ -158,6 +164,20 @@ func (i *Interpreter) VisitUnaryExpr(expr *ast.UnaryExpr) {
 			i.runtimeError = newRuntimeError(expr.Operator.Line, "Operands must be numbers.")
 		}
 	}
+}
+
+func (i *Interpreter) VisitVarStmt(stmt *ast.VarStmt) {
+	var value ast.Value
+	if stmt.Initializer != nil {
+		value, _ = i.evaluate(stmt.Initializer)
+	}
+	i.environment.define(stmt.Name.Lexeme, value)
+}
+
+func (i *Interpreter) VisitVariableExpr(expr *ast.VariableExpr) {
+	value, err := i.environment.get(expr.Name)
+	i.result = value
+	i.runtimeError = err
 }
 
 func (i *Interpreter) Interpret(source string) (ast.Value, error) {

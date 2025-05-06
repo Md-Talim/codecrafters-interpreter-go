@@ -57,6 +57,10 @@ func (p *Parser) primary() (ast.Expr, error) {
 		value, _ := strconv.ParseFloat(p.previous().Lexeme, 64)
 		return ast.NewNumberExpr(value), nil
 	}
+	if p.match(ast.IdentifierToken) {
+		name := p.previous()
+		return ast.NewVariableExpr(name), nil
+	}
 
 	if p.match(ast.LeftParenToken) {
 		expr, err := p.expression()
@@ -194,10 +198,35 @@ func (p *Parser) statement() (ast.Stmt, error) {
 	return p.expressionStatement()
 }
 
+func (p *Parser) varDeclaration() (ast.Stmt, error) {
+	name, err := p.consume(ast.IdentifierToken, "Expect variable name.")
+	if err != nil {
+		return nil, err
+	}
+
+	var initializer ast.Expr
+	if p.match(ast.EqualToken) {
+		initializer, err = p.expression()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	p.consume(ast.SemicolonToken, "Expect ';' after variable declaration.")
+	return ast.NewVarStmt(name, initializer), nil
+}
+
+func (p *Parser) declaration() (ast.Stmt, error) {
+	if p.match(ast.VarKeyword) {
+		return p.varDeclaration()
+	}
+	return p.statement()
+}
+
 func (p *Parser) GetStatements() ([]ast.Stmt, error) {
 	statements := []ast.Stmt{}
 	for !p.isAtEnd() {
-		statement, err := p.statement()
+		statement, err := p.declaration()
 		if err != nil {
 			return nil, err
 		}

@@ -32,6 +32,19 @@ func (p *PrintStmt) Accept(visitor AstVisitor) {
 	visitor.VisitPrintStmt(p)
 }
 
+type VarStmt struct {
+	Name        Token
+	Initializer Expr
+}
+
+func NewVarStmt(name Token, initializer Expr) *VarStmt {
+	return &VarStmt{Name: name, Initializer: initializer}
+}
+
+func (v *VarStmt) Accept(visitor AstVisitor) {
+	visitor.VisitVarStmt(v)
+}
+
 type Expr interface {
 	AST
 }
@@ -44,8 +57,10 @@ type AstVisitor interface {
 	VisitNilExpr()
 	VisitNumberExpr(expr *NumberExpr)
 	VisitPrintStmt(stmt *PrintStmt)
+	VisitVarStmt(stmt *VarStmt)
 	VisitStringExpr(expr *StringExpr)
 	VisitUnaryExpr(expr *UnaryExpr)
+	VisitVariableExpr(expr *VariableExpr)
 }
 
 type BinaryExpr struct {
@@ -135,4 +150,16 @@ func NewUnaryExpr(operator Token, right Expr) *UnaryExpr {
 
 func (un *UnaryExpr) Accept(visitor AstVisitor) {
 	visitor.VisitUnaryExpr(un)
+}
+
+type VariableExpr struct {
+	Name Token
+}
+
+func NewVariableExpr(name Token) *VariableExpr {
+	return &VariableExpr{Name: name}
+}
+
+func (v *VariableExpr) Accept(visitor AstVisitor) {
+	visitor.VisitVariableExpr(v)
 }
