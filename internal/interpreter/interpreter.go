@@ -184,12 +184,16 @@ func (i *Interpreter) Run(source string) {
 	}
 
 	for _, stmt := range statements {
-		i.execute(stmt)
+		if _, err := i.execute(stmt); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(70)
+		}
 	}
 }
 
-func (i *Interpreter) execute(stmt ast.Stmt) {
+func (i *Interpreter) execute(stmt ast.Stmt) (ast.Value, error) {
 	stmt.Accept(i)
+	return i.result, i.runtimeError
 }
 
 func (i *Interpreter) evaluate(ast ast.AST) (ast.Value, error) {
