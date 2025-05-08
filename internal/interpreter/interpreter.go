@@ -24,6 +24,11 @@ func newRuntimeError(line int, message string) error {
 	return errors.New(text)
 }
 
+func (i *Interpreter) VisitAssignExpr(expr *ast.AssignExpr) {
+	value, _ := i.evaluate(expr.Value)
+	i.environment.assign(expr.Name, value)
+}
+
 func (i *Interpreter) VisitBinaryExpr(expr *ast.BinaryExpr) {
 	var left, right ast.Value
 	var err error

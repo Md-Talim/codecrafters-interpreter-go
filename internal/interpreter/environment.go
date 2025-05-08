@@ -6,6 +6,14 @@ type Environment struct {
 	values map[string]ast.Value
 }
 
+func (e *Environment) assign(name ast.Token, value ast.Value) {
+	if _, ok := e.values[name.Lexeme]; ok {
+		e.define(name.Lexeme, value)
+		return
+	}
+	newRuntimeError(name.Line, "Undefined variable '"+name.Lexeme+"'.")
+}
+
 func (e *Environment) define(name string, value ast.Value) {
 	e.values[name] = value
 }

@@ -6,6 +6,7 @@ type AST interface {
 
 type AstVisitor interface {
 	// Expression Nodes
+	VisitAssignExpr(expr *AssignExpr)
 	VisitBinaryExpr(expr *BinaryExpr)
 	VisitBooleanExpr(expr *BooleanExpr)
 	VisitGroupingExpr(expr *GroupingExpr)

@@ -4,6 +4,22 @@ type Expr interface {
 	AST
 }
 
+type AssignExpr struct {
+	Name  Token
+	Value Expr
+}
+
+func NewAssignExpr(name Token, value Expr) *AssignExpr {
+	return &AssignExpr{
+		Name:  name,
+		Value: value,
+	}
+}
+
+func (expr *AssignExpr) Accept(visitor AstVisitor) {
+	visitor.VisitAssignExpr(expr)
+}
+
 type BinaryExpr struct {
 	Left     Expr
 	Right    Expr

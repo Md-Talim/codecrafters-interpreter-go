@@ -160,8 +160,31 @@ func (p *Parser) equality() (ast.Expr, error) {
 	return expr, nil
 }
 
+func (p *Parser) assignment() (ast.Expr, error) {
+	expr, err := p.equality()
+	if err != nil {
+		return nil, err
+	}
+
+	if p.match(ast.EqualToken) {
+		equals := p.previous()
+		value, err := p.assignment()
+		if err != nil {
+			return nil, err
+		}
+
+		if v, ok := expr.(*ast.VariableExpr); ok {
+			return ast.NewAssignExpr(v.Name, value), nil
+		}
+
+		p.error(equals, "Invalid assignment target.")
+	}
+
+	return expr, nil
+}
+
 func (p *Parser) expression() (ast.Expr, error) {
-	return p.equality()
+	return p.assignment()
 }
 
 func (p *Parser) expressionStatement() (ast.Stmt, error) {
