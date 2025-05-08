@@ -167,7 +167,7 @@ func (i *Interpreter) VisitUnaryExpr(expr *ast.UnaryExpr) {
 }
 
 func (i *Interpreter) VisitVarStmt(stmt *ast.VarStmt) {
-	var value ast.Value
+	var value ast.Value = ast.NewNilValue()
 	if stmt.Initializer != nil {
 		value, _ = i.evaluate(stmt.Initializer)
 	}
