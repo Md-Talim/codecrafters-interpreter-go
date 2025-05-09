@@ -3,12 +3,17 @@ package interpreter
 import "codecrafters-interpreter-go/internal/ast"
 
 type Environment struct {
-	values map[string]ast.Value
+	enclosing *Environment
+	values    map[string]ast.Value
 }
 
 func (e *Environment) assign(name ast.Token, value ast.Value) {
 	if _, ok := e.values[name.Lexeme]; ok {
 		e.define(name.Lexeme, value)
+		return
+	}
+	if e.enclosing != nil {
+		e.enclosing.assign(name, value)
 		return
 	}
 	newRuntimeError(name.Line, "Undefined variable '"+name.Lexeme+"'.")
@@ -21,6 +26,9 @@ func (e *Environment) define(name string, value ast.Value) {
 func (e *Environment) get(name ast.Token) (ast.Value, error) {
 	if value, ok := e.values[name.Lexeme]; ok {
 		return value, nil
+	}
+	if e.enclosing != nil {
+		return e.enclosing.get(name)
 	}
 	return ast.NewNilValue(), newRuntimeError(name.Line, "Undefined variable '"+name.Lexeme+"'.")
 }

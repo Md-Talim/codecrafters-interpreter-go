@@ -17,6 +17,7 @@ type AstVisitor interface {
 	VisitVariableExpr(expr *VariableExpr)
 
 	// Statement Nodes
+	VisitBlockStmt(stmt *BlockStmt)
 	VisitExpressionStmt(stmt *ExpressionStmt)
 	VisitPrintStmt(stmt *PrintStmt)
 	VisitVarStmt(stmt *VarStmt)

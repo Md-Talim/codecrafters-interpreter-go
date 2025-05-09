@@ -4,6 +4,18 @@ type Stmt interface {
 	AST
 }
 
+type BlockStmt struct {
+	Statements []Stmt
+}
+
+func NewBlockStmt(statements []Stmt) *BlockStmt {
+	return &BlockStmt{Statements: statements}
+}
+
+func (e *BlockStmt) Accept(visitor AstVisitor) {
+	visitor.VisitBlockStmt(e)
+}
+
 type ExpressionStmt struct {
 	Expression AST
 }

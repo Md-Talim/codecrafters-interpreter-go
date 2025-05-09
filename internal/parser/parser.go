@@ -209,6 +209,23 @@ func (p *Parser) printStatement() (ast.Stmt, error) {
 	return ast.NewPrintStmt(value), nil
 }
 
+func (p *Parser) block() ([]ast.Stmt, error) {
+	statements := []ast.Stmt{}
+
+	for !p.check(ast.RightBraceToken) && !p.isAtEnd() {
+		declaration, err := p.declaration()
+		if err != nil {
+			return nil, err
+		}
+		statements = append(statements, declaration)
+	}
+
+	if _, err := p.consume(ast.RightBraceToken, "Expect '}' after block."); err != nil {
+		return nil, err
+	}
+	return statements, nil
+}
+
 func (p *Parser) statement() (ast.Stmt, error) {
 	if p.match(ast.PrintKeyword) {
 		statement, err := p.printStatement()
@@ -216,6 +233,13 @@ func (p *Parser) statement() (ast.Stmt, error) {
 			return nil, err
 		}
 		return statement, nil
+	}
+	if p.match(ast.LeftBraceToken) {
+		blocks, err := p.block()
+		if err != nil {
+			return nil, err
+		}
+		return ast.NewBlockStmt(blocks), nil
 	}
 
 	return p.expressionStatement()

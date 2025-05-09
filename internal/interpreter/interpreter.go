@@ -15,7 +15,7 @@ type Interpreter struct {
 }
 
 func NewInterpreter() *Interpreter {
-	environment := &Environment{values: make(map[string]ast.Value)}
+	environment := &Environment{enclosing: nil, values: make(map[string]ast.Value)}
 	return &Interpreter{environment: environment}
 }
 
@@ -94,6 +94,10 @@ func (i *Interpreter) VisitBinaryExpr(expr *ast.BinaryExpr) {
 	default:
 		i.runtimeError = newRuntimeError(expr.Operator.Line, "Unknown operator.")
 	}
+}
+
+func (i *Interpreter) VisitBlockStmt(stmt *ast.BlockStmt) {
+	i.executeBlock(stmt.Statements, &Environment{enclosing: i.environment, values: make(map[string]ast.Value)})
 }
 
 func (i *Interpreter) VisitBooleanExpr(expr *ast.BooleanExpr) {
@@ -219,6 +223,15 @@ func (i *Interpreter) Run(source string) {
 func (i *Interpreter) execute(stmt ast.Stmt) (ast.Value, error) {
 	stmt.Accept(i)
 	return i.result, i.runtimeError
+}
+
+func (i *Interpreter) executeBlock(statements []ast.Stmt, environment *Environment) {
+	previous := i.environment
+	i.environment = environment
+	for _, statement := range statements {
+		i.execute(statement)
+	}
+	i.environment = previous
 }
 
 func (i *Interpreter) evaluate(ast ast.AST) (ast.Value, error) {
