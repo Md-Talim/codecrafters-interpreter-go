@@ -122,6 +122,18 @@ func (i *Interpreter) VisitIfStmt(stmt *ast.IfStmt) {
 	}
 }
 
+func (i *Interpreter) VisitLogicalExpr(expr *ast.LogicalExpr) {
+	left, _ := i.evaluate(expr.Left)
+	if expr.Operator.Type == ast.OrKeyword {
+		if left.IsTruthy() {
+			i.result = left
+			return
+		}
+	}
+	right, _ := i.evaluate(expr.Right)
+	i.result = right
+}
+
 func (i *Interpreter) VisitNilExpr() {
 	i.result = ast.NewNilValue()
 	i.runtimeError = nil

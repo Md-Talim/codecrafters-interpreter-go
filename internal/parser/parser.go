@@ -160,8 +160,26 @@ func (p *Parser) equality() (ast.Expr, error) {
 	return expr, nil
 }
 
-func (p *Parser) assignment() (ast.Expr, error) {
+func (p *Parser) or() (ast.Expr, error) {
 	expr, err := p.equality()
+	if err != nil {
+		return nil, err
+	}
+
+	for p.match(ast.OrKeyword) {
+		operator := p.previous()
+		right, err := p.equality()
+		if err != nil {
+			return nil, err
+		}
+		expr = ast.NewLogicalExpr(expr, operator, right)
+	}
+
+	return expr, nil
+}
+
+func (p *Parser) assignment() (ast.Expr, error) {
+	expr, err := p.or()
 	if err != nil {
 		return nil, err
 	}

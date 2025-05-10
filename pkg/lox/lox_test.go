@@ -17,6 +17,10 @@ func TestLoxFeatures(t *testing.T) {
 			name:    "Conditional Execution",
 			testDir: "conditional_execution",
 		},
+		{
+			name:    "Logical Operators",
+			testDir: "logical_operators",
+		},
 	}
 
 	for _, tt := range tests {

@@ -62,6 +62,20 @@ func (g *GroupingExpr) Accept(visitor AstVisitor) {
 	visitor.VisitGroupingExpr(g)
 }
 
+type LogicalExpr struct {
+	Left     Expr
+	Operator Token
+	Right    Expr
+}
+
+func NewLogicalExpr(left Expr, operator Token, right Expr) *LogicalExpr {
+	return &LogicalExpr{Left: left, Operator: operator, Right: right}
+}
+
+func (expr *LogicalExpr) Accept(visitor AstVisitor) {
+	visitor.VisitLogicalExpr(expr)
+}
+
 type NilExpr struct{}
 
 func NewNilExpr() *NilExpr {
