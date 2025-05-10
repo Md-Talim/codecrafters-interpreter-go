@@ -64,11 +64,10 @@ func TestLoxFeatures(t *testing.T) {
 				}
 
 				// Compare output with expected
-				trimmedOutput := strings.TrimSpace(output.String())
-				trimmedExpected := strings.TrimSpace(string(expected))
-				if strings.Compare(trimmedOutput, trimmedExpected) == 0 {
-					t.Errorf(
-						"Test %s failed.\nExpected:\n%s\nGot:\n%s",
+				trimmedOutput := strings.ReplaceAll(strings.TrimSpace(output.String()), "\r\n", "\n")
+				trimmedExpected := strings.ReplaceAll(strings.TrimSpace(string(expected)), "\r\n", "\n")
+				if trimmedOutput != trimmedExpected {
+					t.Errorf("Test %s failed.\nExpected:\n%s\n\nGot:\n%s",
 						f.Name(), trimmedExpected, trimmedOutput)
 				}
 			}
