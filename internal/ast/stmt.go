@@ -29,12 +29,12 @@ func (e *ExpressionStmt) Accept(visitor AstVisitor) {
 }
 
 type IfStmt struct {
-	Condition Expr
-	ThenBrach Stmt
+	Condition  Expr
+	ThenBranch Stmt
 }
 
 func NewIfStmt(condition Expr, thenBranch Stmt) *IfStmt {
-	return &IfStmt{Condition: condition, ThenBrach: thenBranch}
+	return &IfStmt{Condition: condition, ThenBranch: thenBranch}
 }
 
 func (p *IfStmt) Accept(visitor AstVisitor) {

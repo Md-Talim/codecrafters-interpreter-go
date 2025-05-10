@@ -116,7 +116,7 @@ func (i *Interpreter) VisitGroupingExpr(expr *ast.GroupingExpr) {
 func (i *Interpreter) VisitIfStmt(stmt *ast.IfStmt) {
 	value, _ := i.evaluate(stmt.Condition)
 	if value.IsTruthy() {
-		i.execute(stmt.ThenBrach)
+		i.execute(stmt.ThenBranch)
 	}
 }
 
