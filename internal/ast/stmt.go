@@ -28,6 +28,19 @@ func (e *ExpressionStmt) Accept(visitor AstVisitor) {
 	visitor.VisitExpressionStmt(e)
 }
 
+type IfStmt struct {
+	Condition Expr
+	ThenBrach Stmt
+}
+
+func NewIfStmt(condition Expr, thenBranch Stmt) *IfStmt {
+	return &IfStmt{Condition: condition, ThenBrach: thenBranch}
+}
+
+func (p *IfStmt) Accept(visitor AstVisitor) {
+	visitor.VisitIfStmt(p)
+}
+
 type PrintStmt struct {
 	Expression AST
 }

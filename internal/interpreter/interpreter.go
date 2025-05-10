@@ -113,6 +113,13 @@ func (i *Interpreter) VisitGroupingExpr(expr *ast.GroupingExpr) {
 	i.result, i.runtimeError = i.evaluate(expr.Expression)
 }
 
+func (i *Interpreter) VisitIfStmt(stmt *ast.IfStmt) {
+	value, _ := i.evaluate(stmt.Condition)
+	if value.IsTruthy() {
+		i.execute(stmt.ThenBrach)
+	}
+}
+
 func (i *Interpreter) VisitNilExpr() {
 	i.result = ast.NewNilValue()
 	i.runtimeError = nil

@@ -209,6 +209,26 @@ func (p *Parser) printStatement() (ast.Stmt, error) {
 	return ast.NewPrintStmt(value), nil
 }
 
+func (p *Parser) ifStatement() (ast.Stmt, error) {
+	if _, err := p.consume(ast.LeftParenToken, "Expect '(' after 'if'."); err != nil {
+		return nil, err
+	}
+	condition, err := p.expression()
+	if err != nil {
+		return nil, err
+	}
+	if _, err := p.consume(ast.RightParenToken, "Expect ')' after if condition."); err != nil {
+		return nil, err
+	}
+
+	thenBrach, err := p.statement()
+	if err != nil {
+		return nil, err
+	}
+
+	return ast.NewIfStmt(condition, thenBrach), nil
+}
+
 func (p *Parser) block() ([]ast.Stmt, error) {
 	statements := []ast.Stmt{}
 
@@ -227,12 +247,11 @@ func (p *Parser) block() ([]ast.Stmt, error) {
 }
 
 func (p *Parser) statement() (ast.Stmt, error) {
+	if p.match(ast.IfKeyword) {
+		return p.ifStatement()
+	}
 	if p.match(ast.PrintKeyword) {
-		statement, err := p.printStatement()
-		if err != nil {
-			return nil, err
-		}
-		return statement, nil
+		return p.printStatement()
 	}
 	if p.match(ast.LeftBraceToken) {
 		blocks, err := p.block()
