@@ -226,7 +226,14 @@ func (p *Parser) ifStatement() (ast.Stmt, error) {
 		return nil, err
 	}
 
-	return ast.NewIfStmt(condition, thenBrach), nil
+	var elseBranch ast.Stmt = nil
+	if p.match(ast.ElseKeyword) {
+		if elseBranch, err = p.statement(); err != nil {
+			return nil, err
+		}
+	}
+
+	return ast.NewIfStmt(condition, thenBrach, elseBranch), nil
 }
 
 func (p *Parser) block() ([]ast.Stmt, error) {

@@ -117,6 +117,8 @@ func (i *Interpreter) VisitIfStmt(stmt *ast.IfStmt) {
 	value, _ := i.evaluate(stmt.Condition)
 	if value.IsTruthy() {
 		i.execute(stmt.ThenBranch)
+	} else if stmt.ElseBranch != nil {
+		i.execute(stmt.ElseBranch)
 	}
 }
 

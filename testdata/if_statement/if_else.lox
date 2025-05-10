@@ -1,0 +1,15 @@
+// Test case 1
+if (true) print "if branch"; else print "else branch";
+
+// Test case 2
+var age = 21;
+if (age > 18) print "adult"; else print "child";
+
+// Test case 3
+if (false) {
+  print "if block";
+} else print "else statement";
+
+if (false) print "if statement"; else {
+  print "else block";
+}
