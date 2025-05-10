@@ -14,8 +14,8 @@ func TestLoxFeatures(t *testing.T) {
 		testDir string
 	}{
 		{
-			name:    "if_statement",
-			testDir: "if_statement",
+			name:    "Conditional Execution",
+			testDir: "conditional_execution",
 		},
 	}
 

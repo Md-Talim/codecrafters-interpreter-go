@@ -1,0 +1,35 @@
+// Test Case 1
+if (true) print "if branch"; else if (false) print "else-if branch";
+
+// Test Case 2
+if (true) {
+  print "hello";
+} else if (true) print "hello";
+
+if (true) print "hello"; else if (true) {
+  print "hello";
+}
+
+// Test Case 3
+var age = 88;
+var stage = "unknown";
+if (age < 18) { stage = "child"; }
+else if (age >= 18) { stage = "adult"; }
+else if (age >= 65) { stage = "senior"; }
+else if (age >= 100) { stage = "centenarian"; }
+print stage;
+
+// Test case 4
+// Variable redeclaration is supported
+var age = 67;
+
+var isAdult = age >= 18;
+if (isAdult) { print "eligible for voting: true"; }
+else { print "eligible for voting: false"; }
+
+if (age < 16) { print "eligible for driving: false"; }
+else if (age < 18) { print "eligible for driving: learner's permit"; }
+else { print "eligible for driving: full license"; }
+
+if (age < 21) { print "eligible for drinking (US): false"; }
+else { print "eligible for drinking (US): true"; }
