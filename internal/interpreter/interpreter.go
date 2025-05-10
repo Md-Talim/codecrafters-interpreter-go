@@ -129,6 +129,11 @@ func (i *Interpreter) VisitLogicalExpr(expr *ast.LogicalExpr) {
 			i.result = left
 			return
 		}
+	} else {
+		if !left.IsTruthy() {
+			i.result = left
+			return
+		}
 	}
 	right, _ := i.evaluate(expr.Right)
 	i.result = right
