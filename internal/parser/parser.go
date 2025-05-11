@@ -288,6 +288,63 @@ func (p *Parser) whileStatement() (ast.Stmt, error) {
 	return ast.NewWhileStmt(condition, body), nil
 }
 
+func (p *Parser) forStatement() (ast.Stmt, error) {
+	var (
+		initializer ast.Stmt
+		condition   ast.Expr = nil
+		increment   ast.Expr = nil
+	)
+
+	p.consume(ast.LeftParenToken, "Expect '(' after 'for'.")
+
+	// Parse the loop initializer:
+	// - If semicolon is found: no initializer (empty initialization)
+	// - If 'var' keyword is found: parse variable declaration (e.g., var i = 0;)
+	// - Otherwise: parse expression statement (e.g., i = 0;)
+	// Note: Both varDeclaration and expressionStatement consume the trailing semicolon
+	if p.match(ast.SemicolonToken) {
+		initializer = nil
+	} else if p.match(ast.VarKeyword) {
+		initializer, _ = p.varDeclaration()
+	} else {
+		initializer, _ = p.expressionStatement()
+	}
+
+	// Parse the loop condition
+	if !p.check(ast.SemicolonToken) {
+		condition, _ = p.expression()
+	}
+	p.consume(ast.SemicolonToken, "Expect ';' after loop condition.")
+
+	// Parse the increment statement
+	if !p.check(ast.RightParenToken) {
+		increment, _ = p.expression()
+	}
+	p.consume(ast.RightParenToken, "Expect ')' after for clauses.")
+
+	// Parse the loop body
+	body, err := p.statement()
+	if err != nil {
+		return nil, err
+	}
+
+	if increment != nil {
+		statements := []ast.Stmt{body, ast.NewExpressionStmt(increment)}
+		body = ast.NewBlockStmt(statements)
+	}
+	if condition == nil {
+		condition = ast.NewBooleanExpr(true)
+	}
+	body = ast.NewWhileStmt(condition, body)
+
+	if initializer != nil {
+		statements := []ast.Stmt{initializer, body}
+		body = ast.NewBlockStmt(statements)
+	}
+
+	return body, nil
+}
+
 func (p *Parser) block() ([]ast.Stmt, error) {
 	statements := []ast.Stmt{}
 
@@ -306,6 +363,9 @@ func (p *Parser) block() ([]ast.Stmt, error) {
 }
 
 func (p *Parser) statement() (ast.Stmt, error) {
+	if p.match(ast.ForKeyword) {
+		return p.forStatement()
+	}
 	if p.match(ast.WhileKeyword) {
 		return p.whileStatement()
 	}
