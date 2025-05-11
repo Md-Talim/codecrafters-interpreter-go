@@ -23,4 +23,5 @@ type AstVisitor interface {
 	VisitIfStmt(stmt *IfStmt)
 	VisitPrintStmt(stmt *PrintStmt)
 	VisitVarStmt(stmt *VarStmt)
+	VisitWhileStmt(stmt *WhileStmt)
 }

@@ -215,6 +215,14 @@ func (i *Interpreter) VisitVariableExpr(expr *ast.VariableExpr) {
 	i.runtimeError = err
 }
 
+func (i *Interpreter) VisitWhileStmt(stmt *ast.WhileStmt) {
+	condition, _ := i.evaluate(stmt.Condition)
+	for condition.IsTruthy() {
+		i.execute(stmt.Body)
+		condition, _ = i.evaluate(stmt.Condition)
+	}
+}
+
 func (i *Interpreter) Interpret(source string) (ast.Value, error) {
 	parser := parser.NewParser(source)
 	expr, err := parser.Parse()

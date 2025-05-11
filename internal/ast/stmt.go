@@ -66,3 +66,16 @@ func NewVarStmt(name Token, initializer Expr) *VarStmt {
 func (v *VarStmt) Accept(visitor AstVisitor) {
 	visitor.VisitVarStmt(v)
 }
+
+type WhileStmt struct {
+	Condition Expr
+	Body      Stmt
+}
+
+func NewWhileStmt(condition Expr, body Stmt) *WhileStmt {
+	return &WhileStmt{Condition: condition, Body: body}
+}
+
+func (stmt *WhileStmt) Accept(visitor AstVisitor) {
+	visitor.VisitWhileStmt(stmt)
+}

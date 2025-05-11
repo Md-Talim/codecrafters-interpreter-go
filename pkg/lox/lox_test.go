@@ -21,6 +21,10 @@ func TestLoxFeatures(t *testing.T) {
 			name:    "Logical Operators",
 			testDir: "logical_operators",
 		},
+		{
+			name:    "Loops",
+			testDir: "loops",
+		},
 	}
 
 	for _, tt := range tests {
@@ -71,8 +75,15 @@ func TestLoxFeatures(t *testing.T) {
 				trimmedOutput := strings.ReplaceAll(strings.TrimSpace(output.String()), "\r\n", "\n")
 				trimmedExpected := strings.ReplaceAll(strings.TrimSpace(string(expected)), "\r\n", "\n")
 				if trimmedOutput != trimmedExpected {
-					t.Errorf("Test %s failed.\nExpected:\n%s\n\nGot:\n%s",
-						f.Name(), trimmedExpected, trimmedOutput)
+					t.Errorf(
+						"Test %s failed.\nExpected (len=%d):\n%q\nGot (len=%d):\n%q",
+						f.Name(),
+						len(trimmedExpected),
+						trimmedExpected,
+						len(trimmedOutput),
+						trimmedOutput)
+					// t.Errorf("Test %s failed.\nExpected:\n%s\n\nGot:\n%s",
+					// 	f.Name(), trimmedExpected, trimmedOutput)
 				}
 			}
 		})

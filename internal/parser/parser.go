@@ -272,6 +272,22 @@ func (p *Parser) ifStatement() (ast.Stmt, error) {
 	return ast.NewIfStmt(condition, thenBrach, elseBranch), nil
 }
 
+func (p *Parser) whileStatement() (ast.Stmt, error) {
+	p.consume(ast.LeftParenToken, "Expect '(' after 'while'.")
+	condition, err := p.expression()
+	if err != nil {
+		return nil, err
+	}
+	p.consume(ast.RightParenToken, "Expect ')' after while condition.")
+
+	body, err := p.statement()
+	if err != nil {
+		return nil, err
+	}
+
+	return ast.NewWhileStmt(condition, body), nil
+}
+
 func (p *Parser) block() ([]ast.Stmt, error) {
 	statements := []ast.Stmt{}
 
@@ -290,6 +306,9 @@ func (p *Parser) block() ([]ast.Stmt, error) {
 }
 
 func (p *Parser) statement() (ast.Stmt, error) {
+	if p.match(ast.WhileKeyword) {
+		return p.whileStatement()
+	}
 	if p.match(ast.IfKeyword) {
 		return p.ifStatement()
 	}
