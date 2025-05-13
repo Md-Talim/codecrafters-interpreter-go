@@ -9,6 +9,7 @@ type AstVisitor interface {
 	VisitAssignExpr(expr *AssignExpr)
 	VisitBinaryExpr(expr *BinaryExpr)
 	VisitBooleanExpr(expr *BooleanExpr)
+	VisitCallExpr(expr *CallExpr)
 	VisitGroupingExpr(expr *GroupingExpr)
 	VisitLogicalExpr(expr *LogicalExpr)
 	VisitNilExpr()

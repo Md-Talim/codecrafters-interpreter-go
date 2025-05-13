@@ -7,6 +7,13 @@ type Environment struct {
 	values    map[string]ast.Value
 }
 
+func newEnvironment(enclosing *Environment) *Environment {
+	if enclosing == nil {
+		return &Environment{enclosing: nil, values: make(map[string]ast.Value)}
+	}
+	return &Environment{enclosing: enclosing, values: make(map[string]ast.Value)}
+}
+
 func (e *Environment) assign(name ast.Token, value ast.Value) {
 	if _, ok := e.values[name.Lexeme]; ok {
 		e.define(name.Lexeme, value)

@@ -76,6 +76,48 @@ func (p *Parser) primary() (ast.Expr, error) {
 	return nil, p.error(p.peek(), "Expect expression.")
 }
 
+func (p *Parser) call() (ast.Expr, error) {
+	expr, err := p.primary()
+	if err != nil {
+		return nil, err
+	}
+
+	for {
+		if p.match(ast.LeftParenToken) {
+			expr, err = p.finishCall(expr)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			break
+		}
+	}
+
+	return expr, nil
+}
+
+func (p *Parser) finishCall(callee ast.Expr) (ast.Expr, error) {
+	arguments := []ast.Expr{}
+	if !p.check(ast.RightParenToken) {
+		for {
+			if len(arguments) >= 255 {
+				return nil, p.error(p.peek(), "Can't have more than 255 arguments.")
+			}
+			argument, err := p.expression()
+			if err != nil {
+				return nil, err
+			}
+			arguments = append(arguments, argument)
+		}
+	}
+
+	paren, err := p.consume(ast.RightParenToken, "Expect ')' after argument.")
+	if err != nil {
+		return nil, err
+	}
+	return ast.NewCallExpr(callee, paren, arguments), nil
+}
+
 func (p *Parser) unary() (ast.Expr, error) {
 	if p.match(ast.BangToken, ast.MinusToken) {
 		operator := p.previous()
@@ -85,7 +127,7 @@ func (p *Parser) unary() (ast.Expr, error) {
 		}
 		return ast.NewUnaryExpr(operator, right), nil
 	}
-	return p.primary()
+	return p.call()
 }
 
 func (p *Parser) factor() (ast.Expr, error) {

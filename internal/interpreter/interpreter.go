@@ -10,13 +10,16 @@ import (
 
 type Interpreter struct {
 	environment  *Environment
+	globals      *Environment
 	result       ast.Value
 	runtimeError error
 }
 
 func NewInterpreter() *Interpreter {
-	environment := &Environment{enclosing: nil, values: make(map[string]ast.Value)}
-	return &Interpreter{environment: environment}
+	globals := newEnvironment(nil)
+	environment := globals
+	globals.define("clock", NewClockFunction())
+	return &Interpreter{environment: environment, globals: globals}
 }
 
 func newRuntimeError(line int, message string) error {
@@ -98,6 +101,36 @@ func (i *Interpreter) VisitBinaryExpr(expr *ast.BinaryExpr) {
 
 func (i *Interpreter) VisitBlockStmt(stmt *ast.BlockStmt) {
 	i.executeBlock(stmt.Statements, &Environment{enclosing: i.environment, values: make(map[string]ast.Value)})
+}
+
+func (i *Interpreter) VisitCallExpr(expr *ast.CallExpr) {
+	callee, err := i.evaluate(expr.Callee)
+	if err != nil {
+		i.runtimeError = err
+		return
+	}
+
+	arguments := []ast.Value{}
+	for _, argument := range expr.Arguments {
+		value, err := i.evaluate(argument)
+		if err != nil {
+			i.runtimeError = err
+			return
+		}
+		arguments = append(arguments, value)
+	}
+
+	function, ok := callee.(LoxCallable)
+	if !ok {
+		i.runtimeError = newRuntimeError(expr.Paren.Line, "Can only call function and classes")
+		return
+	}
+	if len(arguments) != function.arity() {
+		message := fmt.Sprintf("Expected %d arguments but got %d.", function.arity(), len(arguments))
+		i.runtimeError = newRuntimeError(expr.Paren.Line, message)
+		return
+	}
+	i.result = function.call(i, arguments)
 }
 
 func (i *Interpreter) VisitBooleanExpr(expr *ast.BooleanExpr) {

@@ -50,6 +50,20 @@ func (b *BooleanExpr) Accept(visitor AstVisitor) {
 	visitor.VisitBooleanExpr(b)
 }
 
+type CallExpr struct {
+	Callee    Expr
+	Paren     Token
+	Arguments []Expr
+}
+
+func NewCallExpr(callee Expr, paren Token, arguments []Expr) *CallExpr {
+	return &CallExpr{Callee: callee, Paren: paren, Arguments: arguments}
+}
+
+func (expr *CallExpr) Accept(visitor AstVisitor) {
+	visitor.VisitCallExpr(expr)
+}
+
 type GroupingExpr struct {
 	Expression Expr
 }
