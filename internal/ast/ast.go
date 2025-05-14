@@ -21,6 +21,7 @@ type AstVisitor interface {
 	// Statement Nodes
 	VisitBlockStmt(stmt *BlockStmt)
 	VisitExpressionStmt(stmt *ExpressionStmt)
+	VisitFunctionStmt(stmt *FunctionStmt)
 	VisitIfStmt(stmt *IfStmt)
 	VisitPrintStmt(stmt *PrintStmt)
 	VisitVarStmt(stmt *VarStmt)

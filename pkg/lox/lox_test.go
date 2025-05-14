@@ -25,6 +25,10 @@ func TestLoxFeatures(t *testing.T) {
 			name:    "Loops",
 			testDir: "loops",
 		},
+		{
+			name:    "Functions",
+			testDir: "functions",
+		},
 	}
 
 	for _, tt := range tests {

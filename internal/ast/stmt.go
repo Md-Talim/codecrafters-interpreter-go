@@ -28,6 +28,20 @@ func (e *ExpressionStmt) Accept(visitor AstVisitor) {
 	visitor.VisitExpressionStmt(e)
 }
 
+type FunctionStmt struct {
+	Name   Token
+	Params []Token
+	Body   []Stmt
+}
+
+func NewFunctionStmt(name Token, params []Token, body []Stmt) *FunctionStmt {
+	return &FunctionStmt{Name: name, Params: params, Body: body}
+}
+
+func (stmt *FunctionStmt) Accept(visitor AstVisitor) {
+	visitor.VisitFunctionStmt(stmt)
+}
+
 type IfStmt struct {
 	Condition  Expr
 	ThenBranch Stmt

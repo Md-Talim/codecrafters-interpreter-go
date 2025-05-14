@@ -12,6 +12,11 @@ func (ap *AstPrinter) VisitCallExpr(expr *CallExpr) {
 	panic("unimplemented")
 }
 
+// VisitFunctionStmt implements AstVisitor.
+func (ap *AstPrinter) VisitFunctionStmt(stmt *FunctionStmt) {
+	panic("unimplemented")
+}
+
 // VisitWhileStmt implements AstVisitor.
 func (ap *AstPrinter) VisitWhileStmt(stmt *WhileStmt) {
 	panic("unimplemented")

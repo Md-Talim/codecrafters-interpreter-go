@@ -446,7 +446,54 @@ func (p *Parser) varDeclaration() (ast.Stmt, error) {
 	return ast.NewVarStmt(name, initializer), nil
 }
 
+func (p *Parser) function(kind string) (ast.Stmt, error) {
+	// Consume the identifier token for the function’s name
+	name, err := p.consume(ast.IdentifierToken, "Expect "+kind+" name.")
+	if err != nil {
+		return nil, err
+	}
+
+	// Parse the parameter list and the pair of parentheses wrapped around it
+	if _, err := p.consume(ast.LeftParenToken, "Expect '(' after "+kind+" name."); err != nil {
+		return nil, err
+	}
+	parameters := []ast.Token{}
+	if !p.check(ast.RightParenToken) {
+		for {
+			if len(parameters) >= 255 {
+				return nil, p.error(p.peek(), "Can't have more than 255 parameters.")
+			}
+
+			param, err := p.consume(ast.IdentifierToken, "Expect parameter name.")
+			if err != nil {
+				return nil, err
+			}
+			parameters = append(parameters, param)
+
+			if !p.match(ast.CommaToken) {
+				break
+			}
+		}
+	}
+	if _, err := p.consume(ast.RightParenToken, "Expect ')' after parameters."); err != nil {
+		return nil, err
+	}
+
+	// parse the body and wrap it all up in a function node
+	if _, err := p.consume(ast.LeftBraceToken, "Expect '{' before "+kind+" body."); err != nil {
+		return nil, err
+	}
+	body, err := p.block()
+	if err != nil {
+		return nil, err
+	}
+	return ast.NewFunctionStmt(name, parameters, body), nil
+}
+
 func (p *Parser) declaration() (ast.Stmt, error) {
+	if p.match(ast.FunKeyword) {
+		return p.function("function")
+	}
 	if p.match(ast.VarKeyword) {
 		return p.varDeclaration()
 	}

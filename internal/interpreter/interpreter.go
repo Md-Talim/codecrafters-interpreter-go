@@ -142,6 +142,11 @@ func (i *Interpreter) VisitExpressionStmt(stmt *ast.ExpressionStmt) {
 	i.evaluate(stmt.Expression)
 }
 
+func (i *Interpreter) VisitFunctionStmt(stmt *ast.FunctionStmt) {
+	function := newLoxFunction(*stmt)
+	i.environment.define(stmt.Name.Lexeme, function)
+}
+
 func (i *Interpreter) VisitGroupingExpr(expr *ast.GroupingExpr) {
 	i.result, i.runtimeError = i.evaluate(expr.Expression)
 }
