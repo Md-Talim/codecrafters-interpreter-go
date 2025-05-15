@@ -7,8 +7,9 @@ import (
 	"codecrafters-interpreter-go/internal/ast"
 )
 
-type ErrorHandler func(line int, message string)
-
+// Scanner implements a lexical analyzer that converts source code into tokens.
+// It processes the source character by character, identifying language constructs
+// such as keywords, identifiers, literals, and operators.
 type Scanner struct {
 	source   []rune
 	tokens   []*ast.Token
@@ -18,10 +19,12 @@ type Scanner struct {
 	hadError bool
 }
 
+// NewScanner initializes a new Scanner instance with the provided source code.
 func NewScanner(source string) *Scanner {
 	return &Scanner{source: []rune(source), line: 1, hadError: false}
 }
 
+// ScanTokens processes the entire source code and returns a slice of tokens.
 func (s *Scanner) ScanTokens() ([]*ast.Token, bool) {
 	for !s.isAtEnd() {
 		s.start = s.current
@@ -32,11 +35,13 @@ func (s *Scanner) ScanTokens() ([]*ast.Token, bool) {
 	return s.tokens, s.hadError
 }
 
+// lexicalError handles lexical errors by printing an error message to stderr.
 func (s *Scanner) lexicalError(line int, message string) {
 	fmt.Fprintf(os.Stderr, "[line %d] Error: %s\n", line, message)
 	s.hadError = true
 }
 
+// scanToken processes the next character in the source code and identifies its type.
 func (s *Scanner) scanToken() {
 	c := s.advance()
 	switch c {
@@ -112,6 +117,7 @@ func (s *Scanner) scanToken() {
 	}
 }
 
+// scanString processes a string literal, ensuring it is properly terminated.
 func (s *Scanner) scanString() {
 	for s.peek() != '"' && !s.isAtEnd() {
 		if s.peek() == '\n' {
@@ -133,6 +139,7 @@ func (s *Scanner) scanString() {
 	s.addTokenWithLiteral(ast.StringToken, value)
 }
 
+// scanNumber processes a number literal, which may include a fractional part.
 func (s *Scanner) scanNumber() {
 	for isDigit(s.peek()) {
 		s.advance()
@@ -159,6 +166,7 @@ func (s *Scanner) scanNumber() {
 	s.addTokenWithLiteral(ast.NumberToken, num)
 }
 
+// scanIdentifier processes an identifier, which may be a keyword or a user-defined name.
 func (s *Scanner) scanIdentifier() {
 	for isAlphaNumeric(s.peek()) {
 		s.advance()
@@ -172,6 +180,7 @@ func (s *Scanner) scanIdentifier() {
 	s.addToken(tokenType)
 }
 
+// match checks if the next character matches the expected rune and advances the current position.
 func (s *Scanner) match(expected rune) bool {
 	if s.isAtEnd() {
 		return false
@@ -184,6 +193,7 @@ func (s *Scanner) match(expected rune) bool {
 	return true
 }
 
+// peek returns the next character without advancing the current position.
 func (s *Scanner) peek() rune {
 	if s.isAtEnd() {
 		return 0
@@ -191,6 +201,8 @@ func (s *Scanner) peek() rune {
 	return s.source[s.current]
 }
 
+// peekNext returns the character after the current one without advancing the current position.
+// This is used to look ahead for multi-character tokens.
 func (s *Scanner) peekNext() rune {
 	if s.current+1 >= len(s.source) {
 		return 0
@@ -198,20 +210,25 @@ func (s *Scanner) peekNext() rune {
 	return s.source[s.current+1]
 }
 
+// isAtEnd checks if the scanner has reached the end of the source code.
 func (s *Scanner) isAtEnd() bool {
 	return s.current >= len(s.source)
 }
 
+// advance advances the current position and returns the character at that position.
 func (s *Scanner) advance() rune {
 	token := s.source[s.current]
 	s.current++
 	return token
 }
 
+// addToken creates a new token and adds it to the list of tokens.
 func (s *Scanner) addToken(t ast.TokenType) {
 	s.addTokenWithLiteral(t, nil)
 }
 
+// addTokenWithLiteral creates a new token with a literal value and adds it to the list of tokens.
+// This is used for tokens that have an associated value, such as numbers or strings.
 func (s *Scanner) addTokenWithLiteral(t ast.TokenType, literal any) {
 	text := string(s.source[s.start:s.current])
 	s.tokens = append(s.tokens, &ast.Token{Type: t, Lexeme: text, Literal: literal, Line: s.line})
