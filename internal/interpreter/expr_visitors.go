@@ -1,0 +1,135 @@
+package interpreter
+
+import (
+	"codecrafters-interpreter-go/internal/ast"
+	"fmt"
+)
+
+// VisitAssignExpr implements ast.AstVisitor.
+// It evaluates the value of the assignment expression and assigns it to the variable name.
+func (i *Interpreter) VisitAssignExpr(expr *ast.AssignExpr) (ast.Value, error) {
+	value, err := i.evaluate(expr.Value)
+	if err != nil {
+		return nil, err
+	}
+	err = i.environment.assign(expr.Name, value)
+	return value, err
+}
+
+// VisitBinaryExpr implements ast.AstVisitor.
+// It evaluates the left and right expressions and performs the binary operation.
+func (i *Interpreter) VisitBinaryExpr(expr *ast.BinaryExpr) (ast.Value, error) {
+	left, err := i.evaluate(expr.Left)
+	if err != nil {
+		return nil, err
+	}
+	right, err := i.evaluate(expr.Right)
+	if err != nil {
+		return nil, err
+	}
+	operator := expr.Operator.Type
+	switch operator {
+	case ast.PlusToken:
+		return performAddition(left, right, expr.Operator.Line)
+	case ast.EqualEqualToken, ast.BangEqualToken:
+		return performEqualityOperation(left, right, operator), nil
+	case ast.StarToken, ast.SlashToken, ast.MinusToken, ast.GreaterEqualToken, ast.GreaterToken, ast.LessEqualToken, ast.LessToken:
+		return performNumericOperation(left, right, operator, expr.Operator.Line)
+	default:
+		return nil, newRuntimeError(expr.Operator.Line, "Unknown operator.")
+	}
+}
+
+// VisitCallExpr implements ast.AstVisitor.
+// It evaluates the callee and arguments, and calls the function if valid.
+func (i *Interpreter) VisitCallExpr(expr *ast.CallExpr) (ast.Value, error) {
+	callee, err := i.evaluate(expr.Callee)
+	if err != nil {
+		return nil, err
+	}
+	arguments := []ast.Value{}
+	for _, argument := range expr.Arguments {
+		value, err := i.evaluate(argument)
+		if err != nil {
+			return nil, err
+		}
+		arguments = append(arguments, value)
+	}
+	function, ok := callee.(LoxCallable)
+	if !ok {
+		return nil, newRuntimeError(expr.Paren.Line, "Can only call function and classes")
+	}
+	if len(arguments) != function.arity() {
+		message := fmt.Sprintf("Expected %d arguments but got %d.", function.arity(), len(arguments))
+		return nil, newRuntimeError(expr.Paren.Line, message)
+	}
+	return function.call(i, arguments), nil
+}
+
+// VisitBooleanExpr implements ast.AstVisitor.
+// It returns a new Boolean value based on the expression.
+func (i *Interpreter) VisitBooleanExpr(expr *ast.BooleanExpr) (ast.Value, error) {
+	return ast.NewBooleanValue(expr.Value), nil
+}
+
+// VisitGroupingExpr implements ast.AstVisitor.
+// It evaluates the expression inside the grouping and returns its value.
+func (i *Interpreter) VisitGroupingExpr(expr *ast.GroupingExpr) (ast.Value, error) {
+	return i.evaluate(expr.Expression)
+}
+
+// VisitLogicalExpr implements ast.AstVisitor.
+// It evaluates the left expression and, based on the operator, decides whether to evaluate the right expression.
+// If the left expression is true and the operator is "or", it returns the left value.
+// If the left expression is false and the operator is "and", it returns the left value.
+func (i *Interpreter) VisitLogicalExpr(expr *ast.LogicalExpr) (ast.Value, error) {
+	left, err := i.evaluate(expr.Left)
+	if err != nil {
+		return nil, err
+	}
+	if expr.Operator.Type == ast.OrKeyword {
+		if left.IsTruthy() {
+			return left, nil
+		}
+	} else {
+		if !left.IsTruthy() {
+			return left, nil
+		}
+	}
+	return i.evaluate(expr.Right)
+}
+
+// VisitNilExpr implements ast.AstVisitor.
+// It returns a new Nil value.
+func (i *Interpreter) VisitNilExpr() (ast.Value, error) {
+	return ast.NewNilValue(), nil
+}
+
+// VisitNumberExpr implements ast.AstVisitor.
+// It returns a new Number value based on the expression.
+func (i *Interpreter) VisitNumberExpr(expr *ast.NumberExpr) (ast.Value, error) {
+	return ast.NewNumberValue(expr.Value), nil
+}
+
+// VisitStringExpr implements ast.AstVisitor.
+// It returns a new String value based on the expression.
+func (i *Interpreter) VisitStringExpr(expr *ast.StringExpr) (ast.Value, error) {
+	return ast.NewStringValue(expr.Value), nil
+}
+
+// VisitUnaryExpr implements ast.AstVisitor.
+// It evaluates the right expression and performs the unary operation.
+func (i *Interpreter) VisitUnaryExpr(expr *ast.UnaryExpr) (ast.Value, error) {
+	right, err := i.evaluate(expr.Right)
+	if err != nil {
+		return nil, err
+	}
+	return perfromUnaryOperation(right, expr.Operator.Type, expr.Operator.Line)
+}
+
+// VisitVariableExpr implements ast.AstVisitor.
+// It retrieves the value of the variable from the environment.
+func (i *Interpreter) VisitVariableExpr(expr *ast.VariableExpr) (ast.Value, error) {
+	value, err := i.environment.get(expr.Name)
+	return value, err
+}
