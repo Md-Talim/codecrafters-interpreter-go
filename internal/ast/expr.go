@@ -16,8 +16,8 @@ func NewAssignExpr(name Token, value Expr) *AssignExpr {
 	}
 }
 
-func (expr *AssignExpr) Accept(visitor AstVisitor) {
-	visitor.VisitAssignExpr(expr)
+func (expr *AssignExpr) Accept(visitor AstVisitor) (Value, error) {
+	return visitor.VisitAssignExpr(expr)
 }
 
 type BinaryExpr struct {
@@ -34,8 +34,8 @@ func NewBinaryExpr(operator Token, left, right Expr) *BinaryExpr {
 	}
 }
 
-func (b *BinaryExpr) Accept(visitor AstVisitor) {
-	visitor.VisitBinaryExpr(b)
+func (b *BinaryExpr) Accept(visitor AstVisitor) (Value, error) {
+	return visitor.VisitBinaryExpr(b)
 }
 
 type BooleanExpr struct {
@@ -46,8 +46,8 @@ func NewBooleanExpr(value bool) *BooleanExpr {
 	return &BooleanExpr{Value: value}
 }
 
-func (b *BooleanExpr) Accept(visitor AstVisitor) {
-	visitor.VisitBooleanExpr(b)
+func (b *BooleanExpr) Accept(visitor AstVisitor) (Value, error) {
+	return visitor.VisitBooleanExpr(b)
 }
 
 type CallExpr struct {
@@ -60,8 +60,8 @@ func NewCallExpr(callee Expr, paren Token, arguments []Expr) *CallExpr {
 	return &CallExpr{Callee: callee, Paren: paren, Arguments: arguments}
 }
 
-func (expr *CallExpr) Accept(visitor AstVisitor) {
-	visitor.VisitCallExpr(expr)
+func (expr *CallExpr) Accept(visitor AstVisitor) (Value, error) {
+	return visitor.VisitCallExpr(expr)
 }
 
 type GroupingExpr struct {
@@ -72,8 +72,8 @@ func NewGroupingExpr(expression Expr) *GroupingExpr {
 	return &GroupingExpr{Expression: expression}
 }
 
-func (g *GroupingExpr) Accept(visitor AstVisitor) {
-	visitor.VisitGroupingExpr(g)
+func (g *GroupingExpr) Accept(visitor AstVisitor) (Value, error) {
+	return visitor.VisitGroupingExpr(g)
 }
 
 type LogicalExpr struct {
@@ -86,8 +86,8 @@ func NewLogicalExpr(left Expr, operator Token, right Expr) *LogicalExpr {
 	return &LogicalExpr{Left: left, Operator: operator, Right: right}
 }
 
-func (expr *LogicalExpr) Accept(visitor AstVisitor) {
-	visitor.VisitLogicalExpr(expr)
+func (expr *LogicalExpr) Accept(visitor AstVisitor) (Value, error) {
+	return visitor.VisitLogicalExpr(expr)
 }
 
 type NilExpr struct{}
@@ -96,8 +96,8 @@ func NewNilExpr() *NilExpr {
 	return &NilExpr{}
 }
 
-func (nil *NilExpr) Accept(visitor AstVisitor) {
-	visitor.VisitNilExpr()
+func (nil *NilExpr) Accept(visitor AstVisitor) (Value, error) {
+	return visitor.VisitNilExpr()
 }
 
 type NumberExpr struct {
@@ -108,8 +108,8 @@ func NewNumberExpr(value float64) *NumberExpr {
 	return &NumberExpr{value}
 }
 
-func (num *NumberExpr) Accept(visitor AstVisitor) {
-	visitor.VisitNumberExpr(num)
+func (num *NumberExpr) Accept(visitor AstVisitor) (Value, error) {
+	return visitor.VisitNumberExpr(num)
 }
 
 type StringExpr struct {
@@ -120,8 +120,8 @@ func NewStringExpr(value string) *StringExpr {
 	return &StringExpr{value}
 }
 
-func (string *StringExpr) Accept(visitor AstVisitor) {
-	visitor.VisitStringExpr(string)
+func (string *StringExpr) Accept(visitor AstVisitor) (Value, error) {
+	return visitor.VisitStringExpr(string)
 }
 
 type UnaryExpr struct {
@@ -133,8 +133,8 @@ func NewUnaryExpr(operator Token, right Expr) *UnaryExpr {
 	return &UnaryExpr{operator, right}
 }
 
-func (un *UnaryExpr) Accept(visitor AstVisitor) {
-	visitor.VisitUnaryExpr(un)
+func (un *UnaryExpr) Accept(visitor AstVisitor) (Value, error) {
+	return visitor.VisitUnaryExpr(un)
 }
 
 type VariableExpr struct {
@@ -145,6 +145,6 @@ func NewVariableExpr(name Token) *VariableExpr {
 	return &VariableExpr{Name: name}
 }
 
-func (v *VariableExpr) Accept(visitor AstVisitor) {
-	visitor.VisitVariableExpr(v)
+func (v *VariableExpr) Accept(visitor AstVisitor) (Value, error) {
+	return visitor.VisitVariableExpr(v)
 }

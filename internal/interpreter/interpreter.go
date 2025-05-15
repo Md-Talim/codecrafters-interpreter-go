@@ -9,10 +9,8 @@ import (
 )
 
 type Interpreter struct {
-	environment  *Environment
-	globals      *Environment
-	result       ast.Value
-	runtimeError error
+	environment *Environment
+	globals     *Environment
 }
 
 func NewInterpreter() *Interpreter {
@@ -27,238 +25,235 @@ func newRuntimeError(line int, message string) error {
 	return errors.New(text)
 }
 
-func (i *Interpreter) VisitAssignExpr(expr *ast.AssignExpr) {
-	value, _ := i.evaluate(expr.Value)
-	i.environment.assign(expr.Name, value)
+func (i *Interpreter) VisitAssignExpr(expr *ast.AssignExpr) (ast.Value, error) {
+	value, err := i.evaluate(expr.Value)
+	if err != nil {
+		return nil, err
+	}
+	err = i.environment.assign(expr.Name, value)
+	return value, err
 }
 
-func (i *Interpreter) VisitBinaryExpr(expr *ast.BinaryExpr) {
-	var left, right ast.Value
-	var err error
-
-	operator := expr.Operator.Type
-
-	i.result = nil
-	i.runtimeError = nil
-
-	left, err = i.evaluate(expr.Left)
+func (i *Interpreter) VisitBinaryExpr(expr *ast.BinaryExpr) (ast.Value, error) {
+	left, err := i.evaluate(expr.Left)
 	if err != nil {
-		i.runtimeError = err
-		return
+		return nil, err
 	}
-
-	right, err = i.evaluate(expr.Right)
+	right, err := i.evaluate(expr.Right)
 	if err != nil {
-		i.runtimeError = err
-		return
+		return nil, err
 	}
-
 	leftType := left.GetType()
 	rightType := right.GetType()
-	bothNums := leftType == ast.NumberType && rightType == ast.NumberType
+	areOperandsNumeric := leftType == ast.NumberType && rightType == ast.NumberType
+	areOperandsStrings := leftType == ast.StringType && rightType == ast.StringType
+	operator := expr.Operator.Type
 
 	switch operator {
 	case ast.StarToken, ast.SlashToken, ast.MinusToken, ast.GreaterEqualToken, ast.GreaterToken, ast.LessEqualToken, ast.LessToken:
-		if bothNums {
+		if areOperandsNumeric {
 			leftNum := left.(*ast.NumberValue).Value
 			rightNum := right.(*ast.NumberValue).Value
-
 			switch operator {
 			case ast.StarToken:
-				i.result = ast.NewNumberValue(leftNum * rightNum)
+				return ast.NewNumberValue(leftNum * rightNum), nil
 			case ast.SlashToken:
-				i.result = ast.NewNumberValue(leftNum / rightNum)
+				return ast.NewNumberValue(leftNum / rightNum), nil
 			case ast.MinusToken:
-				i.result = ast.NewNumberValue(leftNum - rightNum)
+				return ast.NewNumberValue(leftNum - rightNum), nil
 			case ast.GreaterToken:
-				i.result = ast.NewBooleanValue(leftNum > rightNum)
+				return ast.NewBooleanValue(leftNum > rightNum), nil
 			case ast.GreaterEqualToken:
-				i.result = ast.NewBooleanValue(leftNum >= rightNum)
+				return ast.NewBooleanValue(leftNum >= rightNum), nil
 			case ast.LessToken:
-				i.result = ast.NewBooleanValue(leftNum < rightNum)
+				return ast.NewBooleanValue(leftNum < rightNum), nil
 			case ast.LessEqualToken:
-				i.result = ast.NewBooleanValue(leftNum <= rightNum)
+				return ast.NewBooleanValue(leftNum <= rightNum), nil
 			}
 		} else {
-			i.runtimeError = newRuntimeError(expr.Operator.Line, "Operands must be numbers.")
+			return nil, newRuntimeError(expr.Operator.Line, "Operands must be numbers.")
 		}
 	case ast.PlusToken:
-		if bothNums {
-			i.result = ast.NewNumberValue(left.(*ast.NumberValue).Value + right.(*ast.NumberValue).Value)
-		} else if leftType == ast.StringType && rightType == ast.StringType {
-			i.result = ast.NewStringValue(left.(*ast.StringValue).Value + right.(*ast.StringValue).Value)
+		if areOperandsNumeric {
+			return ast.NewNumberValue(left.(*ast.NumberValue).Value + right.(*ast.NumberValue).Value), nil
+		} else if areOperandsStrings {
+			return ast.NewStringValue(left.(*ast.StringValue).Value + right.(*ast.StringValue).Value), nil
 		} else {
-			i.runtimeError = newRuntimeError(expr.Operator.Line, "Operands must be two numbers or two strings.")
+			return nil, newRuntimeError(expr.Operator.Line, "Operands must be two numbers or two strings.")
 		}
 	case ast.EqualEqualToken:
-		i.result = ast.NewBooleanValue(left.IsEqualTo(right))
+		return ast.NewBooleanValue(left.IsEqualTo(right)), nil
 	case ast.BangEqualToken:
-		i.result = ast.NewBooleanValue(!left.IsEqualTo(right))
+		return ast.NewBooleanValue(!left.IsEqualTo(right)), nil
 	default:
-		i.runtimeError = newRuntimeError(expr.Operator.Line, "Unknown operator.")
+		return nil, newRuntimeError(expr.Operator.Line, "Unknown operator.")
 	}
+	return nil, nil
 }
 
-func (i *Interpreter) VisitBlockStmt(stmt *ast.BlockStmt) {
-	i.executeBlock(stmt.Statements, &Environment{enclosing: i.environment, values: make(map[string]ast.Value)})
+func (i *Interpreter) VisitBlockStmt(stmt *ast.BlockStmt) (ast.Value, error) {
+	return i.executeBlock(stmt.Statements, &Environment{enclosing: i.environment, values: make(map[string]ast.Value)})
 }
 
-func (i *Interpreter) VisitCallExpr(expr *ast.CallExpr) {
+func (i *Interpreter) VisitCallExpr(expr *ast.CallExpr) (ast.Value, error) {
 	callee, err := i.evaluate(expr.Callee)
 	if err != nil {
-		i.runtimeError = err
-		return
+		return nil, err
 	}
-
 	arguments := []ast.Value{}
 	for _, argument := range expr.Arguments {
 		value, err := i.evaluate(argument)
 		if err != nil {
-			i.runtimeError = err
-			return
+			return nil, err
 		}
 		arguments = append(arguments, value)
 	}
-
 	function, ok := callee.(LoxCallable)
 	if !ok {
-		i.runtimeError = newRuntimeError(expr.Paren.Line, "Can only call function and classes")
-		return
+		return nil, newRuntimeError(expr.Paren.Line, "Can only call function and classes")
 	}
 	if len(arguments) != function.arity() {
 		message := fmt.Sprintf("Expected %d arguments but got %d.", function.arity(), len(arguments))
-		i.runtimeError = newRuntimeError(expr.Paren.Line, message)
-		return
+		return nil, newRuntimeError(expr.Paren.Line, message)
 	}
-	i.result = function.call(i, arguments)
+	return function.call(i, arguments), nil
 }
 
-func (i *Interpreter) VisitBooleanExpr(expr *ast.BooleanExpr) {
-	i.result = ast.NewBooleanValue(expr.Value)
-	i.runtimeError = nil
+func (i *Interpreter) VisitBooleanExpr(expr *ast.BooleanExpr) (ast.Value, error) {
+	return ast.NewBooleanValue(expr.Value), nil
 }
 
-func (i *Interpreter) VisitExpressionStmt(stmt *ast.ExpressionStmt) {
-	i.evaluate(stmt.Expression)
+func (i *Interpreter) VisitExpressionStmt(stmt *ast.ExpressionStmt) (ast.Value, error) {
+	return i.evaluate(stmt.Expression)
 }
 
-func (i *Interpreter) VisitFunctionStmt(stmt *ast.FunctionStmt) {
+func (i *Interpreter) VisitFunctionStmt(stmt *ast.FunctionStmt) (ast.Value, error) {
 	function := newLoxFunction(*stmt)
 	i.environment.define(stmt.Name.Lexeme, function)
+	return nil, nil
 }
 
-func (i *Interpreter) VisitGroupingExpr(expr *ast.GroupingExpr) {
-	i.result, i.runtimeError = i.evaluate(expr.Expression)
+func (i *Interpreter) VisitGroupingExpr(expr *ast.GroupingExpr) (ast.Value, error) {
+	return i.evaluate(expr.Expression)
 }
 
-func (i *Interpreter) VisitIfStmt(stmt *ast.IfStmt) {
-	value, _ := i.evaluate(stmt.Condition)
-	if value.IsTruthy() {
-		i.execute(stmt.ThenBranch)
-	} else if stmt.ElseBranch != nil {
-		i.execute(stmt.ElseBranch)
+func (i *Interpreter) VisitIfStmt(stmt *ast.IfStmt) (ast.Value, error) {
+	value, err := i.evaluate(stmt.Condition)
+	if err != nil {
+		return nil, err
 	}
+	if value.IsTruthy() {
+		return i.execute(stmt.ThenBranch)
+	} else if stmt.ElseBranch != nil {
+		return i.execute(stmt.ElseBranch)
+	}
+	return nil, nil
 }
 
-func (i *Interpreter) VisitLogicalExpr(expr *ast.LogicalExpr) {
-	left, _ := i.evaluate(expr.Left)
+func (i *Interpreter) VisitLogicalExpr(expr *ast.LogicalExpr) (ast.Value, error) {
+	left, err := i.evaluate(expr.Left)
+	if err != nil {
+		return nil, err
+	}
 	if expr.Operator.Type == ast.OrKeyword {
 		if left.IsTruthy() {
-			i.result = left
-			return
+			return left, nil
 		}
 	} else {
 		if !left.IsTruthy() {
-			i.result = left
-			return
+			return left, nil
 		}
 	}
-	right, _ := i.evaluate(expr.Right)
-	i.result = right
+	return i.evaluate(expr.Right)
 }
 
-func (i *Interpreter) VisitNilExpr() {
-	i.result = ast.NewNilValue()
-	i.runtimeError = nil
+func (i *Interpreter) VisitNilExpr() (ast.Value, error) {
+	return ast.NewNilValue(), nil
 }
 
-func (i *Interpreter) VisitNumberExpr(expr *ast.NumberExpr) {
-	i.result = ast.NewNumberValue(expr.Value)
-	i.runtimeError = nil
+func (i *Interpreter) VisitNumberExpr(expr *ast.NumberExpr) (ast.Value, error) {
+	return ast.NewNumberValue(expr.Value), nil
 }
 
-func (i *Interpreter) VisitPrintStmt(stmt *ast.PrintStmt) {
-	if value, err := i.evaluate(stmt.Expression); err == nil {
+func (i *Interpreter) VisitPrintStmt(stmt *ast.PrintStmt) (ast.Value, error) {
+	value, err := i.evaluate(stmt.Expression)
+	if err == nil {
 		fmt.Println(value)
 	}
+	return nil, err
 }
 
-func (i *Interpreter) VisitStringExpr(expr *ast.StringExpr) {
-	i.result = ast.NewStringValue(expr.Value)
-	i.runtimeError = nil
+func (i *Interpreter) VisitStringExpr(expr *ast.StringExpr) (ast.Value, error) {
+	return ast.NewStringValue(expr.Value), nil
 }
 
-func (i *Interpreter) VisitUnaryExpr(expr *ast.UnaryExpr) {
+func (i *Interpreter) VisitUnaryExpr(expr *ast.UnaryExpr) (ast.Value, error) {
 	right, err := i.evaluate(expr.Right)
 	if err != nil {
-		i.runtimeError = err
-		return
+		return nil, err
 	}
-
 	switch expr.Operator.Type {
 	case ast.BangToken:
 		switch right.GetType() {
 		case ast.BooleanType:
 			boolVal := right.(*ast.BooleanValue)
-			i.result = ast.NewBooleanValue(!boolVal.Value)
-			i.runtimeError = nil
+			return ast.NewBooleanValue(!boolVal.Value), nil
 		case ast.StringType:
 			strVal := right.(*ast.StringValue)
-			i.result = ast.NewBooleanValue(strVal.Value == "")
-			i.runtimeError = nil
+			return ast.NewBooleanValue(strVal.Value == ""), nil
 		case ast.NilType:
-			i.result = ast.NewBooleanValue(true)
-			i.runtimeError = nil
+			return ast.NewBooleanValue(true), nil
 		case ast.NumberType:
 			numVal := right.(*ast.NumberValue)
-			i.result = ast.NewBooleanValue(numVal.Value == 0)
-			i.runtimeError = nil
+			return ast.NewBooleanValue(numVal.Value == 0), nil
 		default:
-			i.result = nil
-			i.runtimeError = newRuntimeError(expr.Operator.Line, "Operand must be a boolean, string, nil, or number.")
+			return nil, newRuntimeError(expr.Operator.Line, "Operand must be a boolean, string, nil, or number.")
 		}
 	case ast.MinusToken:
 		if right.GetType() == ast.NumberType {
 			num := right.(*ast.NumberValue)
-			i.result = ast.NewNumberValue(-num.Value)
-			i.runtimeError = nil
+			return ast.NewNumberValue(-num.Value), nil
 		} else {
-			i.result = nil
-			i.runtimeError = newRuntimeError(expr.Operator.Line, "Operands must be numbers.")
+			return nil, newRuntimeError(expr.Operator.Line, "Operands must be numbers.")
 		}
 	}
+	return nil, nil
 }
 
-func (i *Interpreter) VisitVarStmt(stmt *ast.VarStmt) {
+func (i *Interpreter) VisitVarStmt(stmt *ast.VarStmt) (ast.Value, error) {
 	var value ast.Value = ast.NewNilValue()
+	var err error
 	if stmt.Initializer != nil {
-		value, _ = i.evaluate(stmt.Initializer)
+		value, err = i.evaluate(stmt.Initializer)
+		if err != nil {
+			return nil, err
+		}
 	}
 	i.environment.define(stmt.Name.Lexeme, value)
+	return nil, nil
 }
 
-func (i *Interpreter) VisitVariableExpr(expr *ast.VariableExpr) {
+func (i *Interpreter) VisitVariableExpr(expr *ast.VariableExpr) (ast.Value, error) {
 	value, err := i.environment.get(expr.Name)
-	i.result = value
-	i.runtimeError = err
+	return value, err
 }
 
-func (i *Interpreter) VisitWhileStmt(stmt *ast.WhileStmt) {
-	condition, _ := i.evaluate(stmt.Condition)
-	for condition.IsTruthy() {
-		i.execute(stmt.Body)
-		condition, _ = i.evaluate(stmt.Condition)
+func (i *Interpreter) VisitWhileStmt(stmt *ast.WhileStmt) (ast.Value, error) {
+	var lastValue ast.Value
+	for {
+		condition, err := i.evaluate(stmt.Condition)
+		if err != nil {
+			return nil, err
+		}
+		if !condition.IsTruthy() {
+			break
+		}
+		lastValue, err = i.execute(stmt.Body)
+		if err != nil {
+			return nil, err
+		}
 	}
+	return lastValue, nil
 }
 
 func (i *Interpreter) Interpret(source string) (ast.Value, error) {
@@ -268,12 +263,7 @@ func (i *Interpreter) Interpret(source string) (ast.Value, error) {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(65)
 	}
-
-	value, err := i.evaluate(expr)
-	if err != nil {
-		return nil, err
-	}
-	return value, err
+	return i.evaluate(expr)
 }
 
 func (i *Interpreter) Run(source string) {
@@ -283,9 +273,9 @@ func (i *Interpreter) Run(source string) {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(65)
 	}
-
 	for _, stmt := range statements {
-		if _, err := i.execute(stmt); err != nil {
+		_, err := i.execute(stmt)
+		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(70)
 		}
@@ -293,20 +283,24 @@ func (i *Interpreter) Run(source string) {
 }
 
 func (i *Interpreter) execute(stmt ast.Stmt) (ast.Value, error) {
-	stmt.Accept(i)
-	return i.result, i.runtimeError
+	return stmt.Accept(i)
 }
 
-func (i *Interpreter) executeBlock(statements []ast.Stmt, environment *Environment) {
+func (i *Interpreter) executeBlock(statements []ast.Stmt, environment *Environment) (ast.Value, error) {
 	previous := i.environment
 	i.environment = environment
+	var lastValue ast.Value
+	var err error
 	for _, statement := range statements {
-		i.execute(statement)
+		lastValue, err = i.execute(statement)
+		if err != nil {
+			break
+		}
 	}
 	i.environment = previous
+	return lastValue, err
 }
 
 func (i *Interpreter) evaluate(ast ast.AST) (ast.Value, error) {
-	ast.Accept(i)
-	return i.result, i.runtimeError
+	return ast.Accept(i)
 }

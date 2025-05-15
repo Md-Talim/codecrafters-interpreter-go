@@ -14,16 +14,16 @@ func newEnvironment(enclosing *Environment) *Environment {
 	return &Environment{enclosing: enclosing, values: make(map[string]ast.Value)}
 }
 
-func (e *Environment) assign(name ast.Token, value ast.Value) {
+func (e *Environment) assign(name ast.Token, value ast.Value) error {
 	if _, ok := e.values[name.Lexeme]; ok {
 		e.define(name.Lexeme, value)
-		return
+		return nil
 	}
 	if e.enclosing != nil {
 		e.enclosing.assign(name, value)
-		return
+		return nil
 	}
-	newRuntimeError(name.Line, "Undefined variable '"+name.Lexeme+"'.")
+	return newRuntimeError(name.Line, "Undefined variable '"+name.Lexeme+"'.")
 }
 
 func (e *Environment) define(name string, value ast.Value) {
