@@ -108,6 +108,9 @@ func (p *Parser) finishCall(callee ast.Expr) (ast.Expr, error) {
 				return nil, err
 			}
 			arguments = append(arguments, argument)
+			if !p.match(ast.CommaToken) {
+				break
+			}
 		}
 	}
 
