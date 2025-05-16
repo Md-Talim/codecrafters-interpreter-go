@@ -68,6 +68,19 @@ func (p *PrintStmt) Accept(visitor AstVisitor) (Value, error) {
 	return visitor.VisitPrintStmt(p)
 }
 
+type ReturnStmt struct {
+	Keyword Token
+	Value   Expr
+}
+
+func NewReturnStmt(keyword Token, value Expr) *ReturnStmt {
+	return &ReturnStmt{Keyword: keyword, Value: value}
+}
+
+func (stmt *ReturnStmt) Accept(visitor AstVisitor) (Value, error) {
+	return visitor.VisitReturnStmt(stmt)
+}
+
 type VarStmt struct {
 	Name        Token
 	Initializer Expr

@@ -1,0 +1,31 @@
+// Test Case 1
+fun fib(n) {
+  if (n < 2) return n;
+  return fib(n - 2) + fib(n - 1);
+}
+
+var start = clock();
+print fib(32) == 2178309;
+print (clock() - start) < 5; // 5 seconds
+
+// Test Case 2
+fun f() {
+  if (false) return "no"; else return "ok";
+}
+
+print f();
+
+// Test Case 3
+fun f() {
+  while (!true) return "ok";
+}
+
+print f();
+
+// Test Case 4
+fun f() {
+  return;
+  print "bad";
+}
+
+print f();

@@ -175,6 +175,24 @@ func (p *Parser) block() ([]ast.Stmt, error) {
 	return statements, nil
 }
 
+// returnStatement parses a return statement.
+// It handles the return keyword, optional return value, and the semicolon at the end.
+func (p *Parser) returnStatement() (ast.Stmt, error) {
+	keyword := p.previous()
+	var value ast.Expr = nil
+	var err error
+	if !p.check(ast.SemicolonToken) {
+		value, err = p.expression()
+		if err != nil {
+			return nil, err
+		}
+	}
+	if _, err := p.consume(ast.SemicolonToken, "Expect ';' after return value."); err != nil {
+		return nil, err
+	}
+	return ast.NewReturnStmt(keyword, value), nil
+}
+
 // statement parses a statement.
 // It checks for various statement types (for, while, if, print, block) and delegates to the appropriate parsing function.
 func (p *Parser) statement() (ast.Stmt, error) {
@@ -189,6 +207,9 @@ func (p *Parser) statement() (ast.Stmt, error) {
 	}
 	if p.match(ast.PrintKeyword) {
 		return p.printStatement()
+	}
+	if p.match(ast.ReturnKeyword) {
+		return p.returnStatement()
 	}
 	if p.match(ast.LeftBraceToken) {
 		blocks, err := p.block()

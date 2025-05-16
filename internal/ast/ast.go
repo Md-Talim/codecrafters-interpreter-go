@@ -24,6 +24,7 @@ type AstVisitor interface {
 	VisitFunctionStmt(stmt *FunctionStmt) (Value, error)
 	VisitIfStmt(stmt *IfStmt) (Value, error)
 	VisitPrintStmt(stmt *PrintStmt) (Value, error)
+	VisitReturnStmt(stmt *ReturnStmt) (Value, error)
 	VisitVarStmt(stmt *VarStmt) (Value, error)
 	VisitWhileStmt(stmt *WhileStmt) (Value, error)
 }

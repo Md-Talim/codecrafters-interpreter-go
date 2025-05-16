@@ -7,6 +7,11 @@ import (
 
 type AstPrinter struct{}
 
+// VisitReturnStmt implements AstVisitor.
+func (ap *AstPrinter) VisitReturnStmt(stmt *ReturnStmt) (Value, error) {
+	panic("unimplemented")
+}
+
 // VisitCallExpr implements AstVisitor.
 func (ap *AstPrinter) VisitCallExpr(expr *CallExpr) (Value, error) {
 	panic("unimplemented")

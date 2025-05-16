@@ -5,6 +5,20 @@ import (
 	"fmt"
 )
 
+// returnError is a special error used to unwind the call stack for return statements.
+// It's not a "real" error but a control flow mechanism.
+type ReturnError struct {
+	value ast.Value
+}
+
+// Error implements the error interface for ReturnError.
+func (r *ReturnError) Error() string {
+	if r.value != nil && r.value.GetType() != ast.NilType {
+		return fmt.Sprintf("Return value: %s", r.value)
+	}
+	return "return"
+}
+
 // VisitBlockStmt implements the ast.AstVisitor.
 // It executes the block of statements in a new environment.
 func (i *Interpreter) VisitBlockStmt(stmt *ast.BlockStmt) (ast.Value, error) {
@@ -48,6 +62,22 @@ func (i *Interpreter) VisitPrintStmt(stmt *ast.PrintStmt) (ast.Value, error) {
 		fmt.Println(value)
 	}
 	return nil, err
+}
+
+// VisitReturnStmt implements the ast.AstVisitor.
+// It raises a ReturnError with the value to be returned.
+// This is used to exit from a function and return a value.
+func (i *Interpreter) VisitReturnStmt(stmt *ast.ReturnStmt) (ast.Value, error) {
+	var value ast.Value = ast.NewNilValue()
+	var err error
+	if stmt.Value != nil {
+		value, err = i.evaluate(stmt.Value)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return nil, &ReturnError{value: value}
 }
 
 // VisitVarStmt implements the ast.AstVisitor.

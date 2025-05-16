@@ -35,9 +35,16 @@ func (f *LoxFunction) call(interperter *Interpreter, arguments []ast.Value) ast.
 	}
 
 	// Execute the function body in the new environment
-	interperter.executeBlock(f.declaration.Body, env)
+	_, err := interperter.executeBlock(f.declaration.Body, env)
+	if err != nil {
+		if returnErr, ok := err.(*ReturnError); ok {
+			// This is a return statement, not a runtime error.
+			// The actual return value of the function is returnErr.value
+			return returnErr.value
+		}
+	}
 
-	return nil
+	return ast.NewNilValue()
 }
 
 // String returns a string representation of the function.
