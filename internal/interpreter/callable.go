@@ -13,12 +13,13 @@ type LoxCallable interface {
 // LoxFunction represents a function in Lox.
 // It implements the LoxCallable & ast.Value interfaces.
 type LoxFunction struct {
+	closure     *Environment
 	declaration ast.FunctionStmt
 }
 
 // newLoxFunction creates a new LoxFunction instance.
-func newLoxFunction(declaration ast.FunctionStmt) *LoxFunction {
-	return &LoxFunction{declaration: declaration}
+func newLoxFunction(declaration ast.FunctionStmt, closure *Environment) *LoxFunction {
+	return &LoxFunction{closure: closure, declaration: declaration}
 }
 
 // arity returns the number of parameters the function takes.
@@ -29,7 +30,8 @@ func (f *LoxFunction) arity() int {
 // call executes the function with the given arguments.
 func (f *LoxFunction) call(interperter *Interpreter, arguments []ast.Value) ast.Value {
 	// Create a new environment for the function call
-	env := newEnvironment(interperter.globals)
+	// This environment is a child of the closure environment.
+	env := newEnvironment(f.closure)
 	for i, param := range f.declaration.Params {
 		env.define(param.Lexeme, arguments[i])
 	}

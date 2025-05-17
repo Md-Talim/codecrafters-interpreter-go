@@ -34,7 +34,9 @@ func (i *Interpreter) VisitExpressionStmt(stmt *ast.ExpressionStmt) (ast.Value, 
 // VisitFunctionStmt implements the ast.AstVisitor.
 // It defines a new function in the current environment.
 func (i *Interpreter) VisitFunctionStmt(stmt *ast.FunctionStmt) (ast.Value, error) {
-	function := newLoxFunction(*stmt)
+	// The function is a closure, capturing the current environment.
+	// The function is not executed immediately; it is stored in the environment.
+	function := newLoxFunction(*stmt, i.environment)
 	i.environment.define(stmt.Name.Lexeme, function)
 	return nil, nil
 }
