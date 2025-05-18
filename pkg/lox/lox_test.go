@@ -29,6 +29,10 @@ func TestLoxFeatures(t *testing.T) {
 			name:    "Functions",
 			testDir: "functions",
 		},
+		{
+			name:    "Resolving & Binding",
+			testDir: "resolving_binding",
+		},
 	}
 
 	for _, tt := range tests {

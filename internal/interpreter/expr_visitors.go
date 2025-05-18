@@ -5,6 +5,19 @@ import (
 	"fmt"
 )
 
+// lookUpVariable retrieves the value of a variable from the environment.
+// If the variable is not found in the current environment, it checks the global environment.
+func (i *Interpreter) lookUpVariable(name ast.Token, expr ast.Expr) (ast.Value, error) {
+	distance, ok := i.locals[expr]
+	if ok {
+		// If the variable is found in the local environment, return its value.
+		return i.environment.getAt(distance, name)
+	} else {
+		// If the variable is not found in the local environment, check the global environment.
+		return i.globals.get(name)
+	}
+}
+
 // VisitAssignExpr implements ast.AstVisitor.
 // It evaluates the value of the assignment expression and assigns it to the variable name.
 func (i *Interpreter) VisitAssignExpr(expr *ast.AssignExpr) (ast.Value, error) {
@@ -12,7 +25,17 @@ func (i *Interpreter) VisitAssignExpr(expr *ast.AssignExpr) (ast.Value, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = i.environment.assign(expr.Name, value)
+
+	// Check if the variable is found in the local environment.
+	// If found, assign the value to it.
+	distance, ok := i.locals[expr]
+	if ok {
+		i.environment.assignAt(distance, expr.Name, value)
+	} else {
+		// If not found in the local environment, assign the value to the global environment.
+		// This is a fallback mechanism to ensure that the variable is assigned correctly.
+		err = i.globals.assign(expr.Name, value)
+	}
 	return value, err
 }
 
@@ -130,6 +153,5 @@ func (i *Interpreter) VisitUnaryExpr(expr *ast.UnaryExpr) (ast.Value, error) {
 // VisitVariableExpr implements ast.AstVisitor.
 // It retrieves the value of the variable from the environment.
 func (i *Interpreter) VisitVariableExpr(expr *ast.VariableExpr) (ast.Value, error) {
-	value, err := i.environment.get(expr.Name)
-	return value, err
+	return i.lookUpVariable(expr.Name, expr)
 }

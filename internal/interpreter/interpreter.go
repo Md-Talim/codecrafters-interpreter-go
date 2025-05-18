@@ -10,6 +10,7 @@ import (
 type Interpreter struct {
 	environment *Environment
 	globals     *Environment
+	locals      map[ast.Expr]int
 }
 
 // NewInterpreter creates a new interpreter instance with a global environment.
@@ -17,7 +18,7 @@ func NewInterpreter() *Interpreter {
 	globals := newEnvironment(nil)
 	environment := globals
 	globals.define("clock", NewClockFunction())
-	return &Interpreter{environment: environment, globals: globals}
+	return &Interpreter{environment: environment, globals: globals, locals: make(map[ast.Expr]int)}
 }
 
 // Interpret parses the source code and evaluates the expression.
@@ -32,13 +33,7 @@ func (i *Interpreter) Interpret(source string) (ast.Value, error) {
 }
 
 // Run parses the source code and executes the statements.
-func (i *Interpreter) Run(source string) {
-	parser := parser.NewParser(source)
-	statements, err := parser.GetStatements()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(65)
-	}
+func (i *Interpreter) Run(statements []ast.Stmt) {
 	for _, stmt := range statements {
 		_, err := i.execute(stmt)
 		if err != nil {
@@ -72,4 +67,10 @@ func (i *Interpreter) executeBlock(statements []ast.Stmt, environment *Environme
 // evaluate evaluates an AST node and returns its value.
 func (i *Interpreter) evaluate(ast ast.AST) (ast.Value, error) {
 	return ast.Accept(i)
+}
+
+// Resolve resolves the variable's depth in the environment.
+// This is used to keep track of the variable's scope.
+func (i *Interpreter) Resolve(expr ast.Expr, depth int) {
+	i.locals[expr] = depth
 }

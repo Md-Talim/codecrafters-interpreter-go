@@ -7,8 +7,14 @@ import (
 	"codecrafters-interpreter-go/internal/ast"
 	"codecrafters-interpreter-go/internal/interpreter"
 	"codecrafters-interpreter-go/internal/parser"
+	"codecrafters-interpreter-go/internal/resolver"
 	"codecrafters-interpreter-go/internal/scanner"
 )
+
+func getStatements(source string) ([]ast.Stmt, error) {
+	parser := parser.NewParser(source)
+	return parser.GetStatements()
+}
 
 func Tokenize(source string) {
 	scanner := scanner.NewScanner(source)
@@ -45,6 +51,13 @@ func Evaluate(source string) {
 }
 
 func Run(source string) {
+	statements, err := getStatements(source)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(65)
+	}
 	interpreter := interpreter.NewInterpreter()
-	interpreter.Run(source)
+	resolver := resolver.NewResolver(interpreter)
+	resolver.Resolve(statements)
+	interpreter.Run(statements)
 }
