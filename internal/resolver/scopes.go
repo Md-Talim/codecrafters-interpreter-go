@@ -5,6 +5,7 @@ import "errors"
 // Scope represents a single scope in the resolver.
 type Scope map[string]bool
 
+// newScope creates a new empty scope.
 func newScope() Scope {
 	return Scope{}
 }
@@ -31,6 +32,7 @@ func (s *Scope) hasKey(name string) bool {
 // Scopes is a stack of scopes used for variable resolution.
 type Scopes []Scope
 
+// newScopes creates a new empty stack of scopes.
 func newScopes() Scopes {
 	return Scopes{}
 }

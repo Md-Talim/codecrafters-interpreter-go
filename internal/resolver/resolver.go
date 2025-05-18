@@ -157,10 +157,13 @@ func (r *Resolver) VisitWhileStmt(stmt *ast.WhileStmt) (ast.Value, error) {
 	return ast.NewNilValue(), nil
 }
 
+// resolveExpression resolves a single expression.
 func (r *Resolver) resolveExpression(expr ast.Expr) {
 	expr.Accept(r)
 }
 
+// resolveFunction resolves a function statement.
+// It declares the function parameters and resolves the function body.
 func (r *Resolver) resolveFunction(function *ast.FunctionStmt) {
 	r.beginScope()
 	for _, param := range function.Params {
@@ -171,20 +174,8 @@ func (r *Resolver) resolveFunction(function *ast.FunctionStmt) {
 	r.endScope()
 }
 
-// func (r *Resolver) resolveLocal(expr ast.Expr, name ast.Token) {
-// 	for i := r.scopes.size() - 1; i >= 0; i-- {
-// 		scope := r.scopes.get(i)
-// 		if scope.hasKey(name.Lexeme) {
-// 			depth := r.scopes.size() - 1 - i
-// 			fmt.Printf(">> Found %s in scope %d, setting resolution depth to %d\n",
-// 				name.Lexeme, i, depth)
-// 			r.interpreter.Resolve(expr, depth)
-// 			return
-// 		}
-// 	}
-// 	fmt.Printf(">> Variable %s not found in any local scope, assuming global\n", name.Lexeme)
-// }
-
+// resolveLocal resolves a local variable reference.
+// It checks the current scope and its enclosing scopes to find the variable.
 func (r *Resolver) resolveLocal(expr ast.Expr, name ast.Token) {
 	for i := r.scopes.size() - 1; i >= 0; i-- {
 		scope := r.scopes.get(i)
@@ -196,10 +187,12 @@ func (r *Resolver) resolveLocal(expr ast.Expr, name ast.Token) {
 	}
 }
 
+// resolveStatement resolves a single statement.
 func (r *Resolver) resolveStatement(stmt ast.Stmt) (ast.Value, error) {
 	return stmt.Accept(r)
 }
 
+// resolveStatements resolves a list of statements.
 func (r *Resolver) resolveStatements(statements []ast.Stmt) (ast.Value, error) {
 	var lastValue ast.Value
 	var err error
@@ -212,6 +205,7 @@ func (r *Resolver) resolveStatements(statements []ast.Stmt) (ast.Value, error) {
 	return lastValue, err
 }
 
+// Resolve resolves a list of statements.
 func (r *Resolver) Resolve(statements []ast.Stmt) (ast.Value, error) {
 	return r.resolveStatements(statements)
 }
