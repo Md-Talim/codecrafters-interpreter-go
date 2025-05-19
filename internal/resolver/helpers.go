@@ -17,12 +17,16 @@ func (r *Resolver) endScope() {
 }
 
 // declare marks a variable as declared in the current scope.
-func (r *Resolver) declare(name ast.Token) {
+func (r *Resolver) declare(name ast.Token) (err error) {
 	if r.scopes.isEmpty() {
 		return
 	}
 	scope := r.scopes.peek()
+	if scope.hasKey(name.Lexeme) {
+		return newSyntaxError(name, "Variable with this name already declared in this scope.")
+	}
 	scope.set(name.Lexeme, false)
+	return nil
 }
 
 // define marks a variable as defined in the current scope.
