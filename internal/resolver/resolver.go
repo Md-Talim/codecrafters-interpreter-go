@@ -22,22 +22,31 @@ func NewResolver(interpreter *interpreter.Interpreter) *Resolver {
 
 // VisitAssignExpr implements ast.AstVisitor.
 func (r *Resolver) VisitAssignExpr(expr *ast.AssignExpr) (ast.Value, error) {
-	r.resolveExpression(expr.Value)
+	if _, err := r.resolveExpression(expr.Value); err != nil {
+		return ast.NewNilValue(), err
+	}
 	r.resolveLocal(expr, expr.Name)
 	return ast.NewNilValue(), nil
 }
 
 // VisitBinaryExpr implements ast.AstVisitor.
 func (r *Resolver) VisitBinaryExpr(expr *ast.BinaryExpr) (ast.Value, error) {
-	r.resolveExpression(expr.Left)
-	r.resolveExpression(expr.Right)
+	if _, err := r.resolveExpression(expr.Left); err != nil {
+		return ast.NewNilValue(), err
+	}
+	if _, err := r.resolveExpression(expr.Right); err != nil {
+		return ast.NewNilValue(), err
+	}
 	return ast.NewNilValue(), nil
 }
 
 // VisitBlockStmt implements ast.AstVisitor.
 func (r *Resolver) VisitBlockStmt(stmt *ast.BlockStmt) (ast.Value, error) {
 	r.beginScope()
-	r.resolveStatements(stmt.Statements)
+	if _, err := r.resolveStatements(stmt.Statements); err != nil {
+		r.endScope()
+		return ast.NewNilValue(), err
+	}
 	r.endScope()
 	return ast.NewNilValue(), nil
 }
@@ -49,47 +58,66 @@ func (r *Resolver) VisitBooleanExpr(expr *ast.BooleanExpr) (ast.Value, error) {
 
 // VisitCallExpr implements ast.AstVisitor.
 func (r *Resolver) VisitCallExpr(expr *ast.CallExpr) (ast.Value, error) {
-	r.resolveExpression(expr.Callee)
+	if _, err := r.resolveExpression(expr.Callee); err != nil {
+		return ast.NewNilValue(), err
+	}
 	for _, arg := range expr.Arguments {
-		r.resolveExpression(arg)
+		if _, err := r.resolveExpression(arg); err != nil {
+			return ast.NewNilValue(), err
+		}
 	}
 	return ast.NewNilValue(), nil
 }
 
 // VisitExpressionStmt implements ast.AstVisitor.
 func (r *Resolver) VisitExpressionStmt(stmt *ast.ExpressionStmt) (ast.Value, error) {
-	r.resolveExpression(stmt.Expression)
+	if _, err := r.resolveExpression(stmt.Expression); err != nil {
+		return ast.NewNilValue(), err
+	}
 	return ast.NewNilValue(), nil
 }
 
 // VisitFunctionStmt implements ast.AstVisitor.
 func (r *Resolver) VisitFunctionStmt(stmt *ast.FunctionStmt) (ast.Value, error) {
-	r.declare(stmt.Name)
+	if err := r.declare(stmt.Name); err != nil {
+		return ast.NewNilValue(), err
+	}
 	r.define(stmt.Name)
-	r.resolveFunction(stmt)
-	return ast.NewNilValue(), nil
+	return r.resolveFunction(stmt)
 }
 
 // VisitGroupingExpr implements ast.AstVisitor.
 func (r *Resolver) VisitGroupingExpr(expr *ast.GroupingExpr) (ast.Value, error) {
-	r.resolveExpression(expr.Expression)
+	if _, err := r.resolveExpression(expr.Expression); err != nil {
+		return ast.NewNilValue(), err
+	}
 	return ast.NewNilValue(), nil
 }
 
 // VisitIfStmt implements ast.AstVisitor.
 func (r *Resolver) VisitIfStmt(stmt *ast.IfStmt) (ast.Value, error) {
-	r.resolveExpression(stmt.Condition)
-	r.resolveStatement(stmt.ThenBranch)
+	if _, err := r.resolveExpression(stmt.Condition); err != nil {
+		return ast.NewNilValue(), err
+	}
+	if _, err := r.resolveStatement(stmt.ThenBranch); err != nil {
+		return ast.NewNilValue(), err
+	}
 	if stmt.ElseBranch != nil {
-		r.resolveStatement(stmt.ElseBranch)
+		if _, err := r.resolveStatement(stmt.ElseBranch); err != nil {
+			return ast.NewNilValue(), err
+		}
 	}
 	return ast.NewNilValue(), nil
 }
 
 // VisitLogicalExpr implements ast.AstVisitor.
 func (r *Resolver) VisitLogicalExpr(expr *ast.LogicalExpr) (ast.Value, error) {
-	r.resolveExpression(expr.Left)
-	r.resolveExpression(expr.Right)
+	if _, err := r.resolveExpression(expr.Left); err != nil {
+		return ast.NewNilValue(), err
+	}
+	if _, err := r.resolveExpression(expr.Right); err != nil {
+		return ast.NewNilValue(), err
+	}
 	return ast.NewNilValue(), nil
 }
 
@@ -105,14 +133,15 @@ func (r *Resolver) VisitNumberExpr(expr *ast.NumberExpr) (ast.Value, error) {
 
 // VisitPrintStmt implements ast.AstVisitor.
 func (r *Resolver) VisitPrintStmt(stmt *ast.PrintStmt) (ast.Value, error) {
-	r.resolveExpression(stmt.Expression)
-	return ast.NewNilValue(), nil
+	return r.resolveExpression(stmt.Expression)
 }
 
 // VisitReturnStmt implements ast.AstVisitor.
 func (r *Resolver) VisitReturnStmt(stmt *ast.ReturnStmt) (ast.Value, error) {
 	if stmt.Value != nil {
-		r.resolveExpression(stmt.Value)
+		if _, err := r.resolveExpression(stmt.Value); err != nil {
+			return ast.NewNilValue(), err
+		}
 	}
 	return ast.NewNilValue(), nil
 }
@@ -124,15 +153,22 @@ func (r *Resolver) VisitStringExpr(expr *ast.StringExpr) (ast.Value, error) {
 
 // VisitUnaryExpr implements ast.AstVisitor.
 func (r *Resolver) VisitUnaryExpr(expr *ast.UnaryExpr) (ast.Value, error) {
-	r.resolveExpression(expr.Right)
+	if _, err := r.resolveExpression(expr.Right); err != nil {
+		return ast.NewNilValue(), err
+	}
 	return ast.NewNilValue(), nil
 }
 
 // VisitVarStmt implements ast.AstVisitor.
 func (r *Resolver) VisitVarStmt(stmt *ast.VarStmt) (ast.Value, error) {
-	r.declare(stmt.Name)
+	if err := r.declare(stmt.Name); err != nil {
+		return ast.NewNilValue(), err
+	}
+	var err error
 	if stmt.Initializer != nil {
-		r.resolveExpression(stmt.Initializer)
+		if _, err = r.resolveExpression(stmt.Initializer); err != nil {
+			return ast.NewNilValue(), err
+		}
 	}
 	r.define(stmt.Name)
 	return ast.NewNilValue(), nil
@@ -152,26 +188,37 @@ func (r *Resolver) VisitVariableExpr(expr *ast.VariableExpr) (ast.Value, error) 
 
 // VisitWhileStmt implements ast.AstVisitor.
 func (r *Resolver) VisitWhileStmt(stmt *ast.WhileStmt) (ast.Value, error) {
-	r.resolveExpression(stmt.Condition)
-	r.resolveStatement(stmt.Body)
+	if _, err := r.resolveExpression(stmt.Condition); err != nil {
+		return ast.NewNilValue(), err
+	}
+	if _, err := r.resolveStatement(stmt.Body); err != nil {
+		return ast.NewNilValue(), err
+	}
 	return ast.NewNilValue(), nil
 }
 
 // resolveExpression resolves a single expression.
-func (r *Resolver) resolveExpression(expr ast.Expr) {
-	expr.Accept(r)
+func (r *Resolver) resolveExpression(expr ast.Expr) (ast.Value, error) {
+	return expr.Accept(r)
 }
 
 // resolveFunction resolves a function statement.
 // It declares the function parameters and resolves the function body.
-func (r *Resolver) resolveFunction(function *ast.FunctionStmt) {
+func (r *Resolver) resolveFunction(function *ast.FunctionStmt) (ast.Value, error) {
 	r.beginScope()
 	for _, param := range function.Params {
-		r.declare(param)
+		if err := r.declare(param); err != nil {
+			r.endScope()
+			return ast.NewNilValue(), err
+		}
 		r.define(param)
 	}
-	r.resolveStatements(function.Body)
+	if _, err := r.resolveStatements(function.Body); err != nil {
+		r.endScope()
+		return ast.NewNilValue(), err
+	}
 	r.endScope()
+	return ast.NewNilValue(), nil
 }
 
 // resolveLocal resolves a local variable reference.
@@ -199,7 +246,7 @@ func (r *Resolver) resolveStatements(statements []ast.Stmt) (ast.Value, error) {
 	for _, stmt := range statements {
 		lastValue, err = r.resolveStatement(stmt)
 		if err != nil {
-			break
+			return nil, err
 		}
 	}
 	return lastValue, err

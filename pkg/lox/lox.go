@@ -58,6 +58,9 @@ func Run(source string) {
 	}
 	interpreter := interpreter.NewInterpreter()
 	resolver := resolver.NewResolver(interpreter)
-	resolver.Resolve(statements)
+	if _, err = resolver.Resolve(statements); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(65)
+	}
 	interpreter.Run(statements)
 }
