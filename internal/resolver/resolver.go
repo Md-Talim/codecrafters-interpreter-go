@@ -5,18 +5,27 @@ import (
 	"codecrafters-interpreter-go/internal/interpreter"
 )
 
+type FunctionType int
+
+const (
+	NoFunction FunctionType = iota
+	Function
+)
+
 // Resolver is responsible for resolving variable references in the AST.
 type Resolver struct {
-	interpreter *interpreter.Interpreter
-	scopes      Scopes
+	currentFunctionType FunctionType
+	interpreter         *interpreter.Interpreter
+	scopes              Scopes
 }
 
 // NewResolver creates a new Resolver instance.
 func NewResolver(interpreter *interpreter.Interpreter) *Resolver {
 	scopes := newScopes()
 	return &Resolver{
-		interpreter: interpreter,
-		scopes:      scopes,
+		currentFunctionType: NoFunction,
+		interpreter:         interpreter,
+		scopes:              scopes,
 	}
 }
 
@@ -83,7 +92,7 @@ func (r *Resolver) VisitFunctionStmt(stmt *ast.FunctionStmt) (ast.Value, error) 
 		return ast.NewNilValue(), err
 	}
 	r.define(stmt.Name)
-	return r.resolveFunction(stmt)
+	return r.resolveFunction(stmt, Function)
 }
 
 // VisitGroupingExpr implements ast.AstVisitor.
@@ -138,6 +147,9 @@ func (r *Resolver) VisitPrintStmt(stmt *ast.PrintStmt) (ast.Value, error) {
 
 // VisitReturnStmt implements ast.AstVisitor.
 func (r *Resolver) VisitReturnStmt(stmt *ast.ReturnStmt) (ast.Value, error) {
+	if r.currentFunctionType == NoFunction {
+		return nil, newSyntaxError(stmt.Keyword, "Can't return from top-level code.")
+	}
 	if stmt.Value != nil {
 		if _, err := r.resolveExpression(stmt.Value); err != nil {
 			return ast.NewNilValue(), err
@@ -204,7 +216,9 @@ func (r *Resolver) resolveExpression(expr ast.Expr) (ast.Value, error) {
 
 // resolveFunction resolves a function statement.
 // It declares the function parameters and resolves the function body.
-func (r *Resolver) resolveFunction(function *ast.FunctionStmt) (ast.Value, error) {
+func (r *Resolver) resolveFunction(function *ast.FunctionStmt, functionType FunctionType) (ast.Value, error) {
+	enclosingFunctionType := r.currentFunctionType
+	r.currentFunctionType = functionType
 	r.beginScope()
 	for _, param := range function.Params {
 		if err := r.declare(param); err != nil {
@@ -218,6 +232,7 @@ func (r *Resolver) resolveFunction(function *ast.FunctionStmt) (ast.Value, error
 		return ast.NewNilValue(), err
 	}
 	r.endScope()
+	r.currentFunctionType = enclosingFunctionType
 	return ast.NewNilValue(), nil
 }
 
