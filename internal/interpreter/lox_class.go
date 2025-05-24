@@ -3,7 +3,7 @@ package interpreter
 import "codecrafters-interpreter-go/internal/ast"
 
 // LoxClass represents a class in the interpreter.
-// It implements the ast.Value interface.
+// It implements the ast.Value interface and the LoxCallable interface.
 type LoxClass struct {
 	name string
 }
@@ -22,6 +22,7 @@ func (c *LoxClass) arity() int {
 	return 0
 }
 
+// call creates a new instance of the class.
 func (c *LoxClass) call(interperter *Interpreter, arguments []ast.Value) ast.Value {
 	return newLoxClassInstance(c)
 }
@@ -41,39 +42,5 @@ func (c *LoxClass) IsEqualTo(other ast.Value) bool {
 
 // IsTruthy returns true for all class instances.
 func (c *LoxClass) IsTruthy() bool {
-	return true
-}
-
-// LoxClassInstance is the runtime representation of an instance of a Lox class
-type LoxClassInstance struct {
-	class *LoxClass
-}
-
-// newLoxClassInstance creates a new LoxClassInstance for the given class.
-func newLoxClassInstance(class *LoxClass) *LoxClassInstance {
-	return &LoxClassInstance{class: class}
-}
-
-// String returns a string representation of the class instance.
-func (i *LoxClassInstance) String() string {
-	return i.class.String() + " instance"
-}
-
-func (i *LoxClassInstance) GetType() ast.ValueType {
-	return ast.ClassInstanceType
-}
-
-func (i *LoxClassInstance) IsEqualTo(other ast.Value) bool {
-	if other == nil || other.GetType() != i.GetType() {
-		return false
-	}
-	otherInstance, ok := other.(*LoxClassInstance)
-	if !ok {
-		return false
-	}
-	return i.class.IsEqualTo(otherInstance.class)
-}
-
-func (i *LoxClassInstance) IsTruthy() bool {
 	return true
 }
