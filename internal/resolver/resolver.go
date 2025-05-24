@@ -102,6 +102,11 @@ func (r *Resolver) VisitFunctionStmt(stmt *ast.FunctionStmt) (ast.Value, error) 
 	return r.resolveFunction(stmt, Function)
 }
 
+func (r *Resolver) VisitGetExpr(expr *ast.GetExpr) (ast.Value, error) {
+	r.resolveExpression(expr.Object)
+	return ast.NewNilValue(), nil
+}
+
 // VisitGroupingExpr implements ast.AstVisitor.
 func (r *Resolver) VisitGroupingExpr(expr *ast.GroupingExpr) (ast.Value, error) {
 	if _, err := r.resolveExpression(expr.Expression); err != nil {
@@ -162,6 +167,13 @@ func (r *Resolver) VisitReturnStmt(stmt *ast.ReturnStmt) (ast.Value, error) {
 			return ast.NewNilValue(), err
 		}
 	}
+	return ast.NewNilValue(), nil
+}
+
+// VisitSetExpr implements ast.AstVisitor.
+func (r *Resolver) VisitSetExpr(expr *ast.SetExpr) (ast.Value, error) {
+	r.resolveExpression(expr.Object)
+	r.resolveExpression(expr.Value)
 	return ast.NewNilValue(), nil
 }
 

@@ -64,6 +64,19 @@ func (expr *CallExpr) Accept(visitor AstVisitor) (Value, error) {
 	return visitor.VisitCallExpr(expr)
 }
 
+type GetExpr struct {
+	Object Expr
+	Name   Token
+}
+
+func NewGetExpr(object Expr, name Token) *GetExpr {
+	return &GetExpr{Object: object, Name: name}
+}
+
+func (g *GetExpr) Accept(visitor AstVisitor) (Value, error) {
+	return visitor.VisitGetExpr(g)
+}
+
 type GroupingExpr struct {
 	Expression Expr
 }
@@ -110,6 +123,20 @@ func NewNumberExpr(value float64) *NumberExpr {
 
 func (num *NumberExpr) Accept(visitor AstVisitor) (Value, error) {
 	return visitor.VisitNumberExpr(num)
+}
+
+type SetExpr struct {
+	Object Expr
+	Name   Token
+	Value  Expr
+}
+
+func NewSetExpr(object Expr, name Token, value Expr) *SetExpr {
+	return &SetExpr{Object: object, Name: name, Value: value}
+}
+
+func (s *SetExpr) Accept(visitor AstVisitor) (Value, error) {
+	return visitor.VisitSetExpr(s)
 }
 
 type StringExpr struct {

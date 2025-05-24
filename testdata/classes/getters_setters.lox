@@ -1,0 +1,52 @@
+// Test Case 1
+// Multiple properties and conditional access
+class Robot {}
+var r2d2 = Robot();
+
+r2d2.model = "Astromech";
+r2d2.operational = false;
+
+if (r2d2.operational) {
+  print r2d2.model;
+  r2d2.mission = "Navigate hyperspace";
+  print r2d2.mission;
+}
+
+// Test Case 2
+// Multiple instances with properties
+class Superhero {}
+var batman = Superhero();
+var superman = Superhero();
+
+batman.name = "Batman";
+batman.called = 18;
+
+superman.name = "Superman";
+superman.called = 66;
+
+print "Times " + superman.name + " was called:";
+print superman.called;
+print "Times " + batman.name + " was called:";
+print batman.called;
+
+// Test Case 3
+// Property manipulation in functions
+class Wizard {}
+var gandalf = Wizard();
+
+gandalf.color = "Grey";
+gandalf.power = nil;
+print gandalf.color;
+
+fun promote(wizard) {
+  wizard.color = "White";
+  if (true) {
+    wizard.power = 100;
+  } else {
+    wizard.power = 0;
+  }
+}
+
+promote(gandalf);
+print gandalf.color;
+print gandalf.power;

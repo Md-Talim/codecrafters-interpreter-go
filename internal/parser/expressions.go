@@ -60,6 +60,12 @@ func (p *Parser) call() (ast.Expr, error) {
 			if err != nil {
 				return nil, err
 			}
+		} else if p.match(ast.DotToken) {
+			name, err := p.consume(ast.IdentifierToken, "Expect property name after '.'.")
+			if err != nil {
+				return nil, err
+			}
+			expr = ast.NewGetExpr(expr, name)
 		} else {
 			break
 		}
@@ -244,6 +250,9 @@ func (p *Parser) assignment() (ast.Expr, error) {
 
 		if v, ok := expr.(*ast.VariableExpr); ok {
 			return ast.NewAssignExpr(v.Name, value), nil
+		}
+		if get, ok := expr.(*ast.GetExpr); ok {
+			return ast.NewSetExpr(get.Object, get.Name, value), nil
 		}
 
 		return nil, newSyntaxError(equals, "Invalid assignment target.")

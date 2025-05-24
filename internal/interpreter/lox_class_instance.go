@@ -5,12 +5,26 @@ import "codecrafters-interpreter-go/internal/ast"
 // LoxClassInstance is the runtime representation of an instance of a Lox class.
 // It implements the ast.Value interface.
 type LoxClassInstance struct {
-	class *LoxClass
+	class  *LoxClass
+	fields map[string]ast.Value
 }
 
 // newLoxClassInstance creates a new LoxClassInstance for the given class.
 func newLoxClassInstance(class *LoxClass) *LoxClassInstance {
-	return &LoxClassInstance{class: class}
+	return &LoxClassInstance{class: class, fields: make(map[string]ast.Value)}
+}
+
+// get retrieves a property from the class instance.
+func (i *LoxClassInstance) get(name ast.Token) (ast.Value, error) {
+	if value, ok := i.fields[name.Lexeme]; ok {
+		return value, nil
+	}
+	return nil, newRuntimeError(name.Line, "Undefined property '"+name.Lexeme+"'.")
+}
+
+// set sets a property on the class instance.
+func (i *LoxClassInstance) set(name ast.Token, value ast.Value) {
+	i.fields[name.Lexeme] = value
 }
 
 // String returns a string representation of the class instance.

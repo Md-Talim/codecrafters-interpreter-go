@@ -89,6 +89,19 @@ func (i *Interpreter) VisitCallExpr(expr *ast.CallExpr) (ast.Value, error) {
 	return function.call(i, arguments), nil
 }
 
+// VisitGetExpr implements ast.AstVisitor.
+// It retrieves the value of a property from the object instance.
+func (i *Interpreter) VisitGetExpr(expr *ast.GetExpr) (ast.Value, error) {
+	object, err := i.evaluate(expr.Object)
+	if err != nil {
+		return nil, err
+	}
+	if instance, ok := object.(*LoxClassInstance); ok {
+		return instance.get(expr.Name)
+	}
+	return nil, newRuntimeError(expr.Name.Line, "Only instances have properties.")
+}
+
 // VisitBooleanExpr implements ast.AstVisitor.
 // It returns a new Boolean value based on the expression.
 func (i *Interpreter) VisitBooleanExpr(expr *ast.BooleanExpr) (ast.Value, error) {
@@ -132,6 +145,27 @@ func (i *Interpreter) VisitNilExpr() (ast.Value, error) {
 // It returns a new Number value based on the expression.
 func (i *Interpreter) VisitNumberExpr(expr *ast.NumberExpr) (ast.Value, error) {
 	return ast.NewNumberValue(expr.Value), nil
+}
+
+// VisitSetExpr implements ast.AstVisitor.
+// It evaluates the object and sets the value of the field in the object instance.
+func (i *Interpreter) VisitSetExpr(expr *ast.SetExpr) (ast.Value, error) {
+	object, err := i.evaluate(expr.Object)
+	if err != nil {
+		return nil, err
+	}
+
+	loxInstance, ok := object.(*LoxClassInstance)
+	if !ok {
+		return nil, newRuntimeError(expr.Name.Line, "Only instances have fields.")
+	}
+
+	value, err := i.evaluate(expr.Value)
+	if err != nil {
+		return nil, err
+	}
+	loxInstance.set(expr.Name, value)
+	return ast.NewNilValue(), nil
 }
 
 // VisitStringExpr implements ast.AstVisitor.
