@@ -25,6 +25,15 @@ func (i *Interpreter) VisitBlockStmt(stmt *ast.BlockStmt) (ast.Value, error) {
 	return i.executeBlock(stmt.Statements, newEnvironment(i.environment))
 }
 
+// VisitClassStmt implements the ast.AstVisitor.
+// It defines a new class in the current environment.
+func (i *Interpreter) VisitClassStmt(stmt *ast.ClassStmt) (ast.Value, error) {
+	i.environment.define(stmt.Name.Lexeme, ast.NewNilValue())
+	class := newLoxClass(stmt.Name.Lexeme)
+	i.environment.define(stmt.Name.Lexeme, class)
+	return ast.NewNilValue(), nil
+}
+
 // VisitExpressionStmt implements the ast.AstVisitor.
 // It evaluates the expression statement.
 func (i *Interpreter) VisitExpressionStmt(stmt *ast.ExpressionStmt) (ast.Value, error) {

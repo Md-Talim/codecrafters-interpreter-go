@@ -290,9 +290,42 @@ func (p *Parser) function(kind string) (ast.Stmt, error) {
 	return ast.NewFunctionStmt(name, parameters, body), nil
 }
 
+// classDeclaration parses a class declaration.
+// It handles the class name, optional superclass, and method
+func (p *Parser) classDeclaration() (ast.Stmt, error) {
+	name, err := p.consume(ast.IdentifierToken, "Expect class name.")
+	if err != nil {
+		return nil, err
+	}
+	if _, err := p.consume(ast.LeftBraceToken, "Expect '{' before class body."); err != nil {
+		return nil, err
+	}
+
+	methods := []ast.FunctionStmt{}
+	for !p.check(ast.RightBraceToken) && !p.isAtEnd() {
+		method, err := p.function("method")
+		if err != nil {
+			return nil, err
+		}
+		functionStmt, ok := method.(*ast.FunctionStmt)
+		if !ok {
+			return nil, newSyntaxError(p.peek(), "Expect method declaration.")
+		}
+		methods = append(methods, *functionStmt)
+	}
+	if _, err := p.consume(ast.RightBraceToken, "Expect '}' after class body."); err != nil {
+		return nil, err
+	}
+
+	return ast.NewClassStmt(name, methods), nil
+}
+
 // declaration parses a declaration statement.
 // It checks for function declarations, variable declarations, and other statements.
 func (p *Parser) declaration() (ast.Stmt, error) {
+	if p.match(ast.ClassKeyword) {
+		return p.classDeclaration()
+	}
 	if p.match(ast.FunKeyword) {
 		return p.function("function")
 	}

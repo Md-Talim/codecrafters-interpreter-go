@@ -16,6 +16,19 @@ func (e *BlockStmt) Accept(visitor AstVisitor) (Value, error) {
 	return visitor.VisitBlockStmt(e)
 }
 
+type ClassStmt struct {
+	Name   Token
+	Method []FunctionStmt
+}
+
+func NewClassStmt(name Token, method []FunctionStmt) *ClassStmt {
+	return &ClassStmt{Name: name, Method: method}
+}
+
+func (stmt *ClassStmt) Accept(visitor AstVisitor) (Value, error) {
+	return visitor.VisitClassStmt(stmt)
+}
+
 type ExpressionStmt struct {
 	Expression AST
 }

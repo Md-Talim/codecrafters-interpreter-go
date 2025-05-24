@@ -1,0 +1,18 @@
+// Test Case 1
+// Multiple class declarations with empty body
+class Robot {}
+class Wizard {}
+print Robot;
+print Wizard;
+print "Both classes successfully printed";
+
+// Test Case 2
+// Class declaration inside function should work
+fun foo() {
+  class Superhero {}
+  print "Class declared inside function";
+  print Superhero;
+}
+
+foo();
+print "Function called successfully";

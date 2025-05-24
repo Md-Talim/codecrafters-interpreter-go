@@ -78,6 +78,13 @@ func (r *Resolver) VisitCallExpr(expr *ast.CallExpr) (ast.Value, error) {
 	return ast.NewNilValue(), nil
 }
 
+// VisitClassStmt implements ast.AstVisitor.
+func (r *Resolver) VisitClassStmt(stmt *ast.ClassStmt) (ast.Value, error) {
+	r.declare(stmt.Name)
+	r.define(stmt.Name)
+	return ast.NewNilValue(), nil
+}
+
 // VisitExpressionStmt implements ast.AstVisitor.
 func (r *Resolver) VisitExpressionStmt(stmt *ast.ExpressionStmt) (ast.Value, error) {
 	if _, err := r.resolveExpression(stmt.Expression); err != nil {
