@@ -10,6 +10,7 @@ type ValueType int
 const (
 	BooleanType ValueType = iota
 	ClassType
+	ClassInstanceType
 	FunctionType
 	NativeFunctionType
 	NilType
