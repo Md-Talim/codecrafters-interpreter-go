@@ -19,6 +19,12 @@ func (f *LoxFunction) arity() int {
 	return len(f.declaration.Params)
 }
 
+func (f *LoxFunction) bind(instance *LoxClassInstance) *LoxFunction {
+	environment := newEnvironment(f.closure)
+	environment.define("this", instance)
+	return newLoxFunction(f.declaration, environment)
+}
+
 // call executes the function with the given arguments.
 func (f *LoxFunction) call(interperter *Interpreter, arguments []ast.Value) ast.Value {
 	// Create a new environment for the function call

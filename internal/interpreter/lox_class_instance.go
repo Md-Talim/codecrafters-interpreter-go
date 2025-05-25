@@ -20,7 +20,7 @@ func (i *LoxClassInstance) get(name ast.Token) (ast.Value, error) {
 		return value, nil
 	}
 	if method := i.class.findMethod(name.Lexeme); method != nil {
-		return method, nil
+		return method.bind(i), nil
 	}
 
 	return nil, newRuntimeError(name.Line, "Undefined property '"+name.Lexeme+"'.")

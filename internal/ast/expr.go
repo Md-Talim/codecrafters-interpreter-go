@@ -151,6 +151,18 @@ func (string *StringExpr) Accept(visitor AstVisitor) (Value, error) {
 	return visitor.VisitStringExpr(string)
 }
 
+type ThisExpr struct {
+	Keyword Token
+}
+
+func NewThisExpr(keyword Token) *ThisExpr {
+	return &ThisExpr{Keyword: keyword}
+}
+
+func (expr *ThisExpr) Accept(visitor AstVisitor) (Value, error) {
+	return visitor.VisitThisExpr(expr)
+}
+
 type UnaryExpr struct {
 	Operator Token
 	Right    Expr

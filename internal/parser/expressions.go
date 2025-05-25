@@ -29,6 +29,10 @@ func (p *Parser) primary() (ast.Expr, error) {
 		}
 		return ast.NewNumberExpr(value), nil
 	}
+	if p.match(ast.ThisKeyword) {
+		keyword := p.previous()
+		return ast.NewThisExpr(keyword), nil
+	}
 	if p.match(ast.IdentifierToken) {
 		name := p.previous()
 		return ast.NewVariableExpr(name), nil

@@ -1,0 +1,51 @@
+// Test Case 1
+class Calculator {
+  add(a, b) {
+    return a + b + this.memory;
+  }
+}
+
+var calc = Calculator();
+calc.memory = 82;
+print calc.add(92, 1);
+
+// Test Case 2
+class Animal {
+  makeSound() {
+    print this.sound;
+  }
+  identify() {
+    print this.species;
+  }
+}
+
+var dog = Animal();
+dog.sound = "Woof";
+dog.species = "Dog";
+
+var cat = Animal();
+cat.sound = "Meow";
+cat.species = "Cat";
+
+// Swap methods between instances
+cat.makeSound = dog.makeSound;
+dog.identify = cat.identify;
+
+cat.makeSound();
+dog.identify();
+
+// Test Case 3
+class Wizard {
+  getSpellCaster() {
+    fun castSpell() {
+      print this;
+      print "Casting spell as " + this.name;
+    }
+
+    return castSpell;
+  }
+}
+
+var wizard = Wizard();
+wizard.name = "Merlin";
+wizard.getSpellCaster()();

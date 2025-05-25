@@ -174,6 +174,12 @@ func (i *Interpreter) VisitStringExpr(expr *ast.StringExpr) (ast.Value, error) {
 	return ast.NewStringValue(expr.Value), nil
 }
 
+// VisitThisExpr implements ast.AstVisitor
+// It retrieves the value of the "this" keyword in the current environment.
+func (i *Interpreter) VisitThisExpr(expr *ast.ThisExpr) (ast.Value, error) {
+	return i.lookUpVariable(expr.Keyword, expr)
+}
+
 // VisitUnaryExpr implements ast.AstVisitor.
 // It evaluates the right expression and performs the unary operation.
 func (i *Interpreter) VisitUnaryExpr(expr *ast.UnaryExpr) (ast.Value, error) {
