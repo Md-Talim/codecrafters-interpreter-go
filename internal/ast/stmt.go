@@ -17,12 +17,12 @@ func (e *BlockStmt) Accept(visitor AstVisitor) (Value, error) {
 }
 
 type ClassStmt struct {
-	Name   Token
-	Method []FunctionStmt
+	Name    Token
+	Methods []FunctionStmt
 }
 
 func NewClassStmt(name Token, method []FunctionStmt) *ClassStmt {
-	return &ClassStmt{Name: name, Method: method}
+	return &ClassStmt{Name: name, Methods: method}
 }
 
 func (stmt *ClassStmt) Accept(visitor AstVisitor) (Value, error) {

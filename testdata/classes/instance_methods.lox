@@ -1,0 +1,74 @@
+// Test Case 1
+{
+  class Foo {
+    returnSelf() {
+      return Foo;
+    }
+  }
+
+  print Foo().returnSelf();  // expect: Foo
+}
+
+// Test Case 2
+class Wizard {
+  castSpell(spell) {
+    print "Casting a magical spell: " + spell;
+  }
+}
+
+class Dragon {
+  breatheFire(fire, intensity) {
+    print "Breathing " + fire + " with intensity: "
+    + intensity;
+  }
+}
+
+// Methods on different class instances
+var merlin = Wizard();
+var smaug = Dragon();
+
+// Conditional method calling
+if (true) {
+  var action = merlin.castSpell;
+  action("Fireball");
+} else {
+  var action = smaug.breatheFire;
+  action("Fire", "100");
+}
+
+// Test Case 3
+class Superhero {
+  useSpecialPower(hero) {
+    print "Using power: " + hero.specialPower;
+  }
+
+  hasSpecialPower(hero) {
+    return hero.specialPower;
+  }
+
+  giveSpecialPower(hero, power) {
+    hero.specialPower = power;
+  }
+}
+
+// Methods in functions
+fun performHeroics(hero, superheroClass) {
+  if (superheroClass.hasSpecialPower(hero)) {
+    superheroClass.useSpecialPower(hero);
+  } else {
+    print "No special power available";
+  }
+}
+
+var superman = Superhero();
+var heroClass = Superhero();
+
+if (true) {
+  heroClass.giveSpecialPower(superman, "Flight");
+} else {
+  heroClass.giveSpecialPower(superman, "Strength");
+}
+
+performHeroics(superman, heroClass);
+
+// Test Case 4

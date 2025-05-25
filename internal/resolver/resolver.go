@@ -10,6 +10,7 @@ type FunctionType int
 const (
 	NoFunction FunctionType = iota
 	Function
+	Method
 )
 
 // Resolver is responsible for resolving variable references in the AST.
@@ -82,6 +83,11 @@ func (r *Resolver) VisitCallExpr(expr *ast.CallExpr) (ast.Value, error) {
 func (r *Resolver) VisitClassStmt(stmt *ast.ClassStmt) (ast.Value, error) {
 	r.declare(stmt.Name)
 	r.define(stmt.Name)
+
+	for _, method := range stmt.Methods {
+		r.resolveFunction(&method, Method)
+	}
+
 	return ast.NewNilValue(), nil
 }
 
