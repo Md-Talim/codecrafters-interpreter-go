@@ -28,6 +28,8 @@ func (c *LoxClass) call(interperter *Interpreter, arguments []ast.Value) ast.Val
 	return newLoxClassInstance(c)
 }
 
+// findMethod searches for a method with the given name in the class's methods map.
+// It returns the method as a LoxFunction if found, or nil if not found.
 func (c *LoxClass) findMethod(methodName string) *LoxFunction {
 	if method, hasMethod := c.methods[methodName]; hasMethod {
 		return method
