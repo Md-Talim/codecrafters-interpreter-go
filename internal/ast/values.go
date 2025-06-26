@@ -22,6 +22,7 @@ type Value interface {
 	GetType() ValueType
 	IsEqualTo(other Value) bool
 	IsTruthy() bool
+	String() string
 }
 
 type BooleanValue struct {
