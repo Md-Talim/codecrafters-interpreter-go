@@ -11,6 +11,7 @@ const (
 	NoFunction FunctionType = iota
 	Function
 	Method
+	Initializer
 )
 
 type ClassType int
@@ -101,7 +102,13 @@ func (r *Resolver) VisitClassStmt(stmt *ast.ClassStmt) (ast.Value, error) {
 	topScope.set("this", true)
 
 	for _, method := range stmt.Methods {
-		r.resolveFunction(&method, Method)
+		declaration := Method
+		if method.Name.Lexeme == "init" {
+			declaration = Initializer
+		}
+		if _, err := r.resolveFunction(&method, declaration); err != nil {
+			return ast.NewNilValue(), err
+		}
 	}
 
 	r.endScope()
@@ -190,6 +197,9 @@ func (r *Resolver) VisitReturnStmt(stmt *ast.ReturnStmt) (ast.Value, error) {
 		return nil, newSyntaxError(stmt.Keyword, "Can't return from top-level code.")
 	}
 	if stmt.Value != nil {
+		if r.currentFunctionType == Initializer {
+			return nil, newSyntaxError(stmt.Keyword, "Can't return a value from an initializer.")
+		}
 		if _, err := r.resolveExpression(stmt.Value); err != nil {
 			return ast.NewNilValue(), err
 		}

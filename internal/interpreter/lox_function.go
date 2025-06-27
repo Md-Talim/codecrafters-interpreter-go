@@ -41,6 +41,9 @@ func (f *LoxFunction) call(interperter *Interpreter, arguments []ast.Value) (ast
 	_, err := interperter.executeBlock(f.declaration.Body, env)
 	if err != nil {
 		if returnErr, ok := err.(*ReturnError); ok {
+			if f.isInitializer {
+				return f.closure.getAt(0, "this")
+			}
 			// This is a return statement, not a runtime error.
 			// The actual return value of the function is returnErr.value
 			return returnErr.value, nil
