@@ -13,8 +13,16 @@ const (
 	Method
 )
 
+type ClassType int
+
+const (
+	NoClass ClassType = iota
+	Class
+)
+
 // Resolver is responsible for resolving variable references in the AST.
 type Resolver struct {
+	currentClassType    ClassType
 	currentFunctionType FunctionType
 	interpreter         *interpreter.Interpreter
 	scopes              Scopes
@@ -24,6 +32,7 @@ type Resolver struct {
 func NewResolver(interpreter *interpreter.Interpreter) *Resolver {
 	scopes := newScopes()
 	return &Resolver{
+		currentClassType:    NoClass,
 		currentFunctionType: NoFunction,
 		interpreter:         interpreter,
 		scopes:              scopes,
@@ -81,6 +90,9 @@ func (r *Resolver) VisitCallExpr(expr *ast.CallExpr) (ast.Value, error) {
 
 // VisitClassStmt implements ast.AstVisitor.
 func (r *Resolver) VisitClassStmt(stmt *ast.ClassStmt) (ast.Value, error) {
+	enclosingClassType := r.currentClassType
+	r.currentClassType = Class
+
 	r.declare(stmt.Name)
 	r.define(stmt.Name)
 
@@ -93,6 +105,8 @@ func (r *Resolver) VisitClassStmt(stmt *ast.ClassStmt) (ast.Value, error) {
 	}
 
 	r.endScope()
+	r.currentClassType = enclosingClassType
+
 	return ast.NewNilValue(), nil
 }
 
@@ -114,7 +128,9 @@ func (r *Resolver) VisitFunctionStmt(stmt *ast.FunctionStmt) (ast.Value, error) 
 }
 
 func (r *Resolver) VisitGetExpr(expr *ast.GetExpr) (ast.Value, error) {
-	r.resolveExpression(expr.Object)
+	if _, err := r.resolveExpression(expr.Object); err != nil {
+		return ast.NewNilValue(), err
+	}
 	return ast.NewNilValue(), nil
 }
 
@@ -183,8 +199,12 @@ func (r *Resolver) VisitReturnStmt(stmt *ast.ReturnStmt) (ast.Value, error) {
 
 // VisitSetExpr implements ast.AstVisitor.
 func (r *Resolver) VisitSetExpr(expr *ast.SetExpr) (ast.Value, error) {
-	r.resolveExpression(expr.Object)
-	r.resolveExpression(expr.Value)
+	if _, err := r.resolveExpression(expr.Object); err != nil {
+		return ast.NewNilValue(), err
+	}
+	if _, err := r.resolveExpression(expr.Value); err != nil {
+		return ast.NewNilValue(), err
+	}
 	return ast.NewNilValue(), nil
 }
 
@@ -195,6 +215,9 @@ func (r *Resolver) VisitStringExpr(expr *ast.StringExpr) (ast.Value, error) {
 
 // VisitThisExpr implements ast.AstVisitor.
 func (r *Resolver) VisitThisExpr(expr *ast.ThisExpr) (ast.Value, error) {
+	if r.currentClassType == NoClass {
+		return nil, newSyntaxError(expr.Keyword, "Can't use 'this' outside of a class.")
+	}
 	r.resolveLocal(expr, expr.Keyword)
 	return ast.NewNilValue(), nil
 }

@@ -24,8 +24,8 @@ func (c *LoxClass) arity() int {
 }
 
 // call creates a new instance of the class.
-func (c *LoxClass) call(interperter *Interpreter, arguments []ast.Value) ast.Value {
-	return newLoxClassInstance(c)
+func (c *LoxClass) call(interperter *Interpreter, arguments []ast.Value) (ast.Value, error) {
+	return newLoxClassInstance(c), nil
 }
 
 // findMethod searches for a method with the given name in the class's methods map.

@@ -70,6 +70,7 @@ func (i *Interpreter) VisitCallExpr(expr *ast.CallExpr) (ast.Value, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	arguments := []ast.Value{}
 	for _, argument := range expr.Arguments {
 		value, err := i.evaluate(argument)
@@ -86,7 +87,7 @@ func (i *Interpreter) VisitCallExpr(expr *ast.CallExpr) (ast.Value, error) {
 		message := fmt.Sprintf("Expected %d arguments but got %d.", function.arity(), len(arguments))
 		return nil, newRuntimeError(expr.Paren.Line, message)
 	}
-	return function.call(i, arguments), nil
+	return function.call(i, arguments)
 }
 
 // VisitGetExpr implements ast.AstVisitor.

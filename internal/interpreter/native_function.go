@@ -19,9 +19,9 @@ func (c *ClockFunction) arity() int {
 }
 
 // call executes the function with the given arguments.
-func (c *ClockFunction) call(interpreter *Interpreter, arguments []ast.Value) ast.Value {
+func (c *ClockFunction) call(interpreter *Interpreter, arguments []ast.Value) (ast.Value, error) {
 	currentTime := time.Now().Unix()
-	return ast.NewNumberValue(float64(currentTime))
+	return ast.NewNumberValue(float64(currentTime)), nil
 }
 
 // String for ClockFunction

@@ -1,6 +1,8 @@
 package interpreter
 
-import "codecrafters-interpreter-go/internal/ast"
+import (
+	"codecrafters-interpreter-go/internal/ast"
+)
 
 // LoxFunction represents a function in Lox.
 // It implements the LoxCallable & ast.Value interfaces.
@@ -26,7 +28,7 @@ func (f *LoxFunction) bind(instance *LoxClassInstance) *LoxFunction {
 }
 
 // call executes the function with the given arguments.
-func (f *LoxFunction) call(interperter *Interpreter, arguments []ast.Value) ast.Value {
+func (f *LoxFunction) call(interperter *Interpreter, arguments []ast.Value) (ast.Value, error) {
 	// Create a new environment for the function call
 	// This environment is a child of the closure environment.
 	env := newEnvironment(f.closure)
@@ -40,11 +42,12 @@ func (f *LoxFunction) call(interperter *Interpreter, arguments []ast.Value) ast.
 		if returnErr, ok := err.(*ReturnError); ok {
 			// This is a return statement, not a runtime error.
 			// The actual return value of the function is returnErr.value
-			return returnErr.value
+			return returnErr.value, nil
 		}
+		return ast.NewNilValue(), err
 	}
 
-	return ast.NewNilValue()
+	return ast.NewNilValue(), nil
 }
 
 // String returns a string representation of the function.
