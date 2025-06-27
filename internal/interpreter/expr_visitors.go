@@ -11,7 +11,7 @@ func (i *Interpreter) lookUpVariable(name ast.Token, expr ast.Expr) (ast.Value, 
 	distance, ok := i.locals[expr]
 	if ok {
 		// If the variable is found in the local environment, return its value.
-		return i.environment.getAt(distance, name)
+		return i.environment.getAt(distance, name.Lexeme)
 	} else {
 		// If the variable is not found in the local environment, check the global environment.
 		return i.globals.get(name)

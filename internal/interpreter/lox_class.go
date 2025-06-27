@@ -20,12 +20,21 @@ func (c *LoxClass) String() string {
 }
 
 func (c *LoxClass) arity() int {
-	return 0
+	initializer := c.findMethod("init")
+	if initializer == nil {
+		return 0
+	}
+	return initializer.arity()
 }
 
 // call creates a new instance of the class.
 func (c *LoxClass) call(interperter *Interpreter, arguments []ast.Value) (ast.Value, error) {
-	return newLoxClassInstance(c), nil
+	instance := newLoxClassInstance(c)
+	initializer := c.findMethod("init")
+	if initializer != nil {
+		initializer.bind(instance).call(interperter, arguments)
+	}
+	return instance, nil
 }
 
 // findMethod searches for a method with the given name in the class's methods map.

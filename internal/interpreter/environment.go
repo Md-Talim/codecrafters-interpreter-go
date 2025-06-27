@@ -63,6 +63,6 @@ func (e *Environment) get(name ast.Token) (ast.Value, error) {
 }
 
 // getAt retrieves a value from a specific distance in the environment chain.
-func (e *Environment) getAt(distance int, name ast.Token) (ast.Value, error) {
-	return e.ancestor(distance).get(name)
+func (e *Environment) getAt(distance int, name string) (ast.Value, error) {
+	return e.ancestor(distance).values[name], nil
 }

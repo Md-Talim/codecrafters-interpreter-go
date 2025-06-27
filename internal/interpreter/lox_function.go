@@ -7,13 +7,14 @@ import (
 // LoxFunction represents a function in Lox.
 // It implements the LoxCallable & ast.Value interfaces.
 type LoxFunction struct {
-	closure     *Environment
-	declaration ast.FunctionStmt
+	closure       *Environment
+	declaration   ast.FunctionStmt
+	isInitializer bool
 }
 
 // newLoxFunction creates a new LoxFunction instance.
-func newLoxFunction(declaration ast.FunctionStmt, closure *Environment) *LoxFunction {
-	return &LoxFunction{closure: closure, declaration: declaration}
+func newLoxFunction(declaration ast.FunctionStmt, closure *Environment, isInitializer bool) *LoxFunction {
+	return &LoxFunction{closure: closure, declaration: declaration, isInitializer: isInitializer}
 }
 
 // arity returns the number of parameters the function takes.
@@ -24,7 +25,7 @@ func (f *LoxFunction) arity() int {
 func (f *LoxFunction) bind(instance *LoxClassInstance) *LoxFunction {
 	environment := newEnvironment(f.closure)
 	environment.define("this", instance)
-	return newLoxFunction(f.declaration, environment)
+	return newLoxFunction(f.declaration, environment, f.isInitializer)
 }
 
 // call executes the function with the given arguments.
@@ -47,6 +48,9 @@ func (f *LoxFunction) call(interperter *Interpreter, arguments []ast.Value) (ast
 		return ast.NewNilValue(), err
 	}
 
+	if f.isInitializer {
+		return f.closure.getAt(0, "this")
+	}
 	return ast.NewNilValue(), nil
 }
 

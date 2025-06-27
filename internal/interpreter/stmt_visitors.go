@@ -31,7 +31,8 @@ func (i *Interpreter) VisitClassStmt(stmt *ast.ClassStmt) (ast.Value, error) {
 	i.environment.define(stmt.Name.Lexeme, ast.NewNilValue())
 	methods := make(map[string]*LoxFunction)
 	for _, method := range stmt.Methods {
-		function := newLoxFunction(method, i.environment)
+		isInitializer := method.Name.Lexeme == "init"
+		function := newLoxFunction(method, i.environment, isInitializer)
 		methods[method.Name.Lexeme] = function
 	}
 
@@ -52,7 +53,7 @@ func (i *Interpreter) VisitExpressionStmt(stmt *ast.ExpressionStmt) (ast.Value, 
 func (i *Interpreter) VisitFunctionStmt(stmt *ast.FunctionStmt) (ast.Value, error) {
 	// The function is a closure, capturing the current environment.
 	// The function is not executed immediately; it is stored in the environment.
-	function := newLoxFunction(*stmt, i.environment)
+	function := newLoxFunction(*stmt, i.environment, false)
 	i.environment.define(stmt.Name.Lexeme, function)
 	return nil, nil
 }
