@@ -17,12 +17,13 @@ func (e *BlockStmt) Accept(visitor AstVisitor) (Value, error) {
 }
 
 type ClassStmt struct {
-	Name    Token
-	Methods []FunctionStmt
+	Name       Token
+	Methods    []FunctionStmt
+	Superclass *VariableExpr
 }
 
-func NewClassStmt(name Token, method []FunctionStmt) *ClassStmt {
-	return &ClassStmt{Name: name, Methods: method}
+func NewClassStmt(name Token, method []FunctionStmt, superclass *VariableExpr) *ClassStmt {
+	return &ClassStmt{Name: name, Methods: method, Superclass: superclass}
 }
 
 func (stmt *ClassStmt) Accept(visitor AstVisitor) (Value, error) {

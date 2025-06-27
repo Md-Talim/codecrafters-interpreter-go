@@ -28,6 +28,19 @@ func (i *Interpreter) VisitBlockStmt(stmt *ast.BlockStmt) (ast.Value, error) {
 // VisitClassStmt implements the ast.AstVisitor.
 // It defines a new class in the current environment.
 func (i *Interpreter) VisitClassStmt(stmt *ast.ClassStmt) (ast.Value, error) {
+	var superclass ast.Value = nil
+	var isClassInstance bool
+	var err error
+	if stmt.Superclass != nil {
+		superclass, err = i.evaluate(stmt.Superclass)
+		if err != nil {
+			return ast.NewNilValue(), err
+		}
+		if superclass, isClassInstance = superclass.(*LoxClass); !isClassInstance {
+			return ast.NewNilValue(), newRuntimeError(stmt.Superclass.Name.Line, "Superclass must be a class.")
+		}
+	}
+
 	i.environment.define(stmt.Name.Lexeme, ast.NewNilValue())
 	methods := make(map[string]*LoxFunction)
 	for _, method := range stmt.Methods {
@@ -36,7 +49,11 @@ func (i *Interpreter) VisitClassStmt(stmt *ast.ClassStmt) (ast.Value, error) {
 		methods[method.Name.Lexeme] = function
 	}
 
-	class := newLoxClass(stmt.Name.Lexeme, methods)
+	var superclassPtr *LoxClass
+	if superclass != nil {
+		superclassPtr = superclass.(*LoxClass)
+	}
+	class := newLoxClass(stmt.Name.Lexeme, methods, superclassPtr)
 	i.environment.define(stmt.Name.Lexeme, class)
 
 	return ast.NewNilValue(), nil

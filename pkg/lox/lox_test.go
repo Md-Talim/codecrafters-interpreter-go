@@ -37,6 +37,10 @@ func TestLoxFeatures(t *testing.T) {
 			name:    "Classes",
 			testDir: "classes",
 		},
+		{
+			name:    "Inheritence",
+			testDir: "inheritence",
+		},
 	}
 
 	for _, tt := range tests {

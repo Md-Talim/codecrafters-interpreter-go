@@ -297,6 +297,15 @@ func (p *Parser) classDeclaration() (ast.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	var superclass *ast.VariableExpr = nil
+	if p.match(ast.LessToken) {
+		if _, err := p.consume(ast.IdentifierToken, "Expect superclass name."); err != nil {
+			return nil, err
+		}
+		superclass = ast.NewVariableExpr(p.previous())
+	}
+
 	if _, err := p.consume(ast.LeftBraceToken, "Expect '{' before class body."); err != nil {
 		return nil, err
 	}
@@ -317,7 +326,7 @@ func (p *Parser) classDeclaration() (ast.Stmt, error) {
 		return nil, err
 	}
 
-	return ast.NewClassStmt(name, methods), nil
+	return ast.NewClassStmt(name, methods, superclass), nil
 }
 
 // declaration parses a declaration statement.

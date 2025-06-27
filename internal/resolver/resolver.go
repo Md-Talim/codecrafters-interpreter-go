@@ -97,6 +97,15 @@ func (r *Resolver) VisitClassStmt(stmt *ast.ClassStmt) (ast.Value, error) {
 	r.declare(stmt.Name)
 	r.define(stmt.Name)
 
+	if stmt.Superclass != nil {
+		if stmt.Name.Lexeme == stmt.Superclass.Name.Lexeme {
+			return ast.NewNilValue(), newSyntaxError(stmt.Superclass.Name, "A class can't inherit from itself.")
+		}
+		if _, err := r.resolveExpression(stmt.Superclass); err != nil {
+			return ast.NewNilValue(), err
+		}
+	}
+
 	r.beginScope()
 	topScope := r.scopes.peek()
 	topScope.set("this", true)

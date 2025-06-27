@@ -5,13 +5,14 @@ import "codecrafters-interpreter-go/internal/ast"
 // LoxClass represents a class in the interpreter.
 // It implements the ast.Value interface and the LoxCallable interface.
 type LoxClass struct {
-	name    string
-	methods map[string]*LoxFunction
+	name       string
+	superclass *LoxClass
+	methods    map[string]*LoxFunction
 }
 
 // newLoxClass creates a new LoxClass instance.
-func newLoxClass(name string, methods map[string]*LoxFunction) *LoxClass {
-	return &LoxClass{name: name, methods: methods}
+func newLoxClass(name string, methods map[string]*LoxFunction, superclass *LoxClass) *LoxClass {
+	return &LoxClass{name: name, methods: methods, superclass: superclass}
 }
 
 // String returns a string representation of the class.
