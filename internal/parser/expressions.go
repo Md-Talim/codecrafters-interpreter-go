@@ -29,6 +29,17 @@ func (p *Parser) primary() (ast.Expr, error) {
 		}
 		return ast.NewNumberExpr(value), nil
 	}
+	if p.match(ast.SuperKeyword) {
+		keyword := p.previous()
+		if _, err := p.consume(ast.DotToken, "Expect '.' after 'super'."); err != nil {
+			return nil, err
+		}
+		method, err := p.consume(ast.IdentifierToken, "Expect superclass method name.")
+		if err != nil {
+			return nil, err
+		}
+		return ast.NewSuperExpr(keyword, method), nil
+	}
 	if p.match(ast.ThisKeyword) {
 		keyword := p.previous()
 		return ast.NewThisExpr(keyword), nil

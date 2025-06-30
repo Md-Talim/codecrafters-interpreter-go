@@ -106,6 +106,12 @@ func (r *Resolver) VisitClassStmt(stmt *ast.ClassStmt) (ast.Value, error) {
 		}
 	}
 
+	if stmt.Superclass != nil {
+		r.beginScope()
+		topScope := r.scopes.peek()
+		topScope.set("super", true)
+	}
+
 	r.beginScope()
 	topScope := r.scopes.peek()
 	topScope.set("this", true)
@@ -121,6 +127,9 @@ func (r *Resolver) VisitClassStmt(stmt *ast.ClassStmt) (ast.Value, error) {
 	}
 
 	r.endScope()
+	if stmt.Superclass != nil {
+		r.endScope()
+	}
 	r.currentClassType = enclosingClassType
 
 	return ast.NewNilValue(), nil
@@ -230,6 +239,12 @@ func (r *Resolver) VisitSetExpr(expr *ast.SetExpr) (ast.Value, error) {
 // VisitStringExpr implements ast.AstVisitor.
 func (r *Resolver) VisitStringExpr(expr *ast.StringExpr) (ast.Value, error) {
 	return ast.NewStringValue(expr.Value), nil
+}
+
+// VisitSuperExpr implements ast.AstVisitor
+func (r *Resolver) VisitSuperExpr(expr *ast.SuperExpr) (ast.Value, error) {
+	r.resolveLocal(expr, expr.Keyword)
+	return ast.NewNilValue(), nil
 }
 
 // VisitThisExpr implements ast.AstVisitor.

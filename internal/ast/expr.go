@@ -151,6 +151,19 @@ func (string *StringExpr) Accept(visitor AstVisitor) (Value, error) {
 	return visitor.VisitStringExpr(string)
 }
 
+type SuperExpr struct {
+	Keyword Token
+	Method  Token
+}
+
+func NewSuperExpr(keyword, method Token) *SuperExpr {
+	return &SuperExpr{keyword, method}
+}
+
+func (expr *SuperExpr) Accept(visitor AstVisitor) (Value, error) {
+	return visitor.VisitSuperExpr(expr)
+}
+
 type ThisExpr struct {
 	Keyword Token
 }

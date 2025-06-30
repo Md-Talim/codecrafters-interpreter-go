@@ -17,6 +17,7 @@ type AstVisitor interface {
 	VisitNumberExpr(expr *NumberExpr) (Value, error)
 	VisitSetExpr(expr *SetExpr) (Value, error)
 	VisitStringExpr(expr *StringExpr) (Value, error)
+	VisitSuperExpr(expr *SuperExpr) (Value, error)
 	VisitThisExpr(expr *ThisExpr) (Value, error)
 	VisitUnaryExpr(expr *UnaryExpr) (Value, error)
 	VisitVariableExpr(expr *VariableExpr) (Value, error)

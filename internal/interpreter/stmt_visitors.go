@@ -42,6 +42,12 @@ func (i *Interpreter) VisitClassStmt(stmt *ast.ClassStmt) (ast.Value, error) {
 	}
 
 	i.environment.define(stmt.Name.Lexeme, ast.NewNilValue())
+
+	if stmt.Superclass != nil {
+		i.environment = newEnvironment(i.environment)
+		i.environment.define("super", superclass)
+	}
+
 	methods := make(map[string]*LoxFunction)
 	for _, method := range stmt.Methods {
 		isInitializer := method.Name.Lexeme == "init"
@@ -54,6 +60,11 @@ func (i *Interpreter) VisitClassStmt(stmt *ast.ClassStmt) (ast.Value, error) {
 		superclassPtr = superclass.(*LoxClass)
 	}
 	class := newLoxClass(stmt.Name.Lexeme, methods, superclassPtr)
+
+	if superclass != nil {
+		i.environment = i.environment.enclosing
+	}
+
 	i.environment.define(stmt.Name.Lexeme, class)
 
 	return ast.NewNilValue(), nil

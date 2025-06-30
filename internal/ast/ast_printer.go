@@ -7,6 +7,12 @@ import (
 
 type AstPrinter struct{}
 
+// VisitSuperExpr implements AstVisitor.
+func (ap *AstPrinter) VisitSuperExpr(expr *SuperExpr) (Value, error) {
+	fmt.Println(formatSExpr("super", expr.Method))
+	return nil, nil
+}
+
 // VisitThisExpr implements AstVisitor.
 func (ap *AstPrinter) VisitThisExpr(expr *ThisExpr) (Value, error) {
 	fmt.Printf("this")

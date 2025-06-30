@@ -175,6 +175,34 @@ func (i *Interpreter) VisitStringExpr(expr *ast.StringExpr) (ast.Value, error) {
 	return ast.NewStringValue(expr.Value), nil
 }
 
+func (i *Interpreter) VisitSuperExpr(expr *ast.SuperExpr) (ast.Value, error) {
+	distance := i.locals[expr]
+	superclass, err := i.environment.getAt(distance, "super")
+	if err != nil {
+		return ast.NewNilValue(), err
+	}
+	instance, err := i.environment.getAt(distance-1, "this")
+	if err != nil {
+		return ast.NewNilValue(), err
+	}
+
+	superclassPtr, isLoxClass := superclass.(*LoxClass)
+	if !isLoxClass {
+		return ast.NewNilValue(), newRuntimeError(expr.Keyword.Line, "Superclass must be a class.")
+	}
+	instancePtr, isLoxClassInstance := instance.(*LoxClassInstance)
+	if !isLoxClassInstance {
+		return ast.NewNilValue(), newRuntimeError(expr.Keyword.Line, "")
+	}
+
+	method := superclassPtr.findMethod(expr.Method.Lexeme)
+	if method == nil {
+		return ast.NewNilValue(), newRuntimeError(expr.Method.Line, "Undefined property '"+expr.Method.Lexeme+"'.")
+	}
+
+	return method.bind(instancePtr), nil
+}
+
 // VisitThisExpr implements ast.AstVisitor
 // It retrieves the value of the "this" keyword in the current environment.
 func (i *Interpreter) VisitThisExpr(expr *ast.ThisExpr) (ast.Value, error) {
