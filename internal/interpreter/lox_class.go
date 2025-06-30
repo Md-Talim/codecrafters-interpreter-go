@@ -44,6 +44,9 @@ func (c *LoxClass) findMethod(methodName string) *LoxFunction {
 	if method, hasMethod := c.methods[methodName]; hasMethod {
 		return method
 	}
+	if c.superclass != nil {
+		return c.superclass.findMethod(methodName)
+	}
 	return nil
 }
 

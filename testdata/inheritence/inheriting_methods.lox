@@ -1,0 +1,48 @@
+// Test Case 1
+class Doughnut {
+  cook() {
+    print "Fry until golden brown.";
+  }
+}
+
+// BostonCream is a subclass of Doughnut
+class BostonCream < Doughnut {}
+
+// BostonCream class should inherit the cook
+// method from Doughnut class
+BostonCream().cook();
+
+// Test Case 2
+class Root {
+  getName() {
+    print "Root class";
+  }
+}
+
+class Parent < Root {
+  parentMethod() {
+    print "Method defined in Parent";
+  }
+}
+
+class Child < Parent {
+  childMethod() {
+    print "Method defined in Child";
+  }
+}
+
+var root = Root();
+var parent = Parent();
+var child = Child();
+
+// Root methods are available to all
+root.getName();
+parent.getName();
+child.getName();
+
+// Parent methods are available to Parent and Child
+parent.parentMethod();
+child.parentMethod();
+
+// Child methods are only available to Child
+child.childMethod();
