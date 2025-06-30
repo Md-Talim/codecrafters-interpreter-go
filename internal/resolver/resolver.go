@@ -19,6 +19,7 @@ type ClassType int
 const (
 	NoClass ClassType = iota
 	Class
+	SubClass
 )
 
 // Resolver is responsible for resolving variable references in the AST.
@@ -101,6 +102,7 @@ func (r *Resolver) VisitClassStmt(stmt *ast.ClassStmt) (ast.Value, error) {
 		if stmt.Name.Lexeme == stmt.Superclass.Name.Lexeme {
 			return ast.NewNilValue(), newSyntaxError(stmt.Superclass.Name, "A class can't inherit from itself.")
 		}
+		r.currentClassType = SubClass
 		if _, err := r.resolveExpression(stmt.Superclass); err != nil {
 			return ast.NewNilValue(), err
 		}
@@ -243,6 +245,12 @@ func (r *Resolver) VisitStringExpr(expr *ast.StringExpr) (ast.Value, error) {
 
 // VisitSuperExpr implements ast.AstVisitor
 func (r *Resolver) VisitSuperExpr(expr *ast.SuperExpr) (ast.Value, error) {
+	if r.currentClassType == NoClass {
+		return ast.NewNilValue(), newSyntaxError(expr.Keyword, "Can't use 'super' outside of a class.")
+	}
+	if r.currentClassType != SubClass {
+		return ast.NewNilValue(), newSyntaxError(expr.Keyword, "Can't use 'super' in a class with no superclass.")
+	}
 	r.resolveLocal(expr, expr.Keyword)
 	return ast.NewNilValue(), nil
 }
