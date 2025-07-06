@@ -24,10 +24,64 @@ Lox is a simple, dynamically-typed scripting language. This interpreter project 
     - Control flow structures (if/else, while loops).
     - Function definition, calls, and return values.
     - Logical and binary operations.
+    - Class declaration, instantiation, and method calls.
+    - Object-oriented features including inheritance and the `super` keyword.
 - **Error Handling:** Provides descriptive error messages for syntax errors (compile-time) and runtime errors.
 - **Environment & Scope (`internal/interpreter/environment.go`):** Manages lexical scoping for variables and functions using a chain of environment objects.
 - **Callable Types (`internal/interpreter/callable.go`):** Supports Lox functions and native Go functions callable from Lox.
+- **Object-Oriented Programming:** Full support for classes, inheritance, instance methods, constructors, and the `this` and `super` keywords.
 - **Native Functions:** Includes a `clock()` native function to get the current system time.
+
+## 🏗️ Object-Oriented Features
+
+The interpreter fully supports object-oriented programming with the following features:
+
+### Classes and Instances
+- **Class Declaration:** Define classes with the `class` keyword.
+- **Instantiation:** Create instances by calling the class like a function.
+- **Instance Properties:** Get and set properties on instances using dot notation.
+- **Methods:** Define methods within classes that have access to `this`.
+
+### Inheritance
+- **Single Inheritance:** Classes can inherit from a single superclass using the `<` operator.
+- **Method Overriding:** Subclasses can override methods from their superclass.
+- **Super Keyword:** Access superclass methods using `super.methodName()`.
+
+### Special Methods
+- **Constructors:** Define an `init()` method to initialize new instances.
+- **This Binding:** The `this` keyword refers to the current instance within methods.
+
+### Example:
+```lox
+class Vehicle {
+  init(brand) {
+    this.brand = brand;
+  }
+
+  describe() {
+    print "This is a " + this.brand + " vehicle";
+  }
+}
+
+class Car < Vehicle {
+  init(brand, model) {
+    super.init(brand);
+    this.model = model;
+  }
+
+  describe() {
+    print "This is a " + this.brand + " " + this.model;
+  }
+
+  honk() {
+    print "Beep beep!";
+  }
+}
+
+var myCar = Car("Toyota", "Camry");
+myCar.describe(); // "This is a Toyota Camry"
+myCar.honk();     // "Beep beep!"
+```
 
 ## 🛠️ Why I Built This Project
 
@@ -45,11 +99,13 @@ The interpreter processes Lox code in several stages:
 2.  **Scanning:** The `scanner.NewScanner(source).ScanTokens()` method breaks the raw source string into a list of `Token` objects. Each token has a type (e.g., `IDENTIFIER`, `STRING`, `NUMBER`, `PLUS`), a lexeme (the actual text), a literal value (for strings and numbers), and a line number for error reporting.
 3.  **Parsing:** The `parser.NewParser(tokens).Parse()` method (or `GetStatements()` for a full program) takes the list of tokens and constructs an AST. It uses a recursive descent approach, with separate functions for parsing different grammatical rules (e.g., expressions, statements, primary expressions). If syntax errors are encountered, they are reported.
 4.  **Resolving (Static Analysis):** Before interpretation, the `resolver.NewResolver(interpreter).Resolve(statements)` pass walks the AST. Its primary job is to determine, for each variable access, how many environments "up" the chain it needs to go to find the variable\'s definition. This information is stored and used by the interpreter for efficient lookups. It also catches errors like reading a variable in its own initializer or using `return` outside a function.
-5.  **Interpreting:** The `interpreter.NewInterpreter().Run(statements)` (or `Interpret()` for single expressions) method walks the AST using the Visitor pattern. Each node type in the AST (e.g., `BinaryExpr`, `IfStmt`, `FunctionStmt`) has a corresponding `Visit...` method in the interpreter.
+5.  **Interpreting:** The `interpreter.NewInterpreter().Run(statements)` (or `Interpret()` for single expressions) method walks the AST using the Visitor pattern. Each node type in the AST (e.g., `BinaryExpr`, `IfStmt`, `FunctionStmt`, `ClassStmt`) has a corresponding `Visit...` method in the interpreter.
     *   **Expressions** are evaluated to produce a value.
     *   **Statements** are executed for their side effects (e.g., defining a variable, printing output).
     *   **Environments** are created for blocks and function calls to manage lexical scope. When a variable is looked up, the resolver\'s previously computed depth is used to quickly find it in the correct environment.
     *   **Function calls** involve creating a new environment, binding arguments to parameters, and executing the function\'s body.
+    *   **Class instantiation** creates new instances with their own property storage and method binding.
+    *   **Inheritance** is handled by copying methods from superclasses and managing the `super` keyword for method calls up the inheritance chain.
 
 ## ⚙️ How to Set Up and Run
 
@@ -103,6 +159,36 @@ The main entry point is `cmd/myinterpreter/main.go`. A helper script `your_progr
       print "a is not greater than 5";
     }
 
+    // Class and inheritance example
+    class Animal {
+      init(name) {
+        this.name = name;
+      }
+
+      speak() {
+        print this.name + " makes a sound";
+      }
+    }
+
+    class Dog < Animal {
+      init(name, breed) {
+        super.init(name);
+        this.breed = breed;
+      }
+
+      speak() {
+        print this.name + " barks";
+      }
+
+      getBreed() {
+        return this.breed;
+      }
+    }
+
+    var myDog = Dog("Rex", "Golden Retriever");
+    myDog.speak();
+    print "Breed: " + myDog.getBreed();
+
     print clock(); // Native function
     ```
 
@@ -116,6 +202,8 @@ The main entry point is `cmd/myinterpreter/main.go`. A helper script `your_progr
     Hello, Lox!
     Hello, User!
     a is greater than 5
+    Rex barks
+    Breed: Golden Retriever
     <current_timestamp>
     ```
 
@@ -141,6 +229,8 @@ The main entry point is `cmd/myinterpreter/main.go`. A helper script `your_progr
 -   **Managing State:** Keeping track of the current environment, function type (for `return` statement validation), and scope resolution details required careful state management within the Resolver and Interpreter.
 -   **Debugging the Parser:** Recursive descent parsers can be tricky to debug. Print statements and a methodical approach were essential. The `AstPrinter` was invaluable.
 -   **Testing:** Writing small Lox test files for each feature and comparing the output against expected results was crucial for ensuring correctness.
+-   **Class and Inheritance Implementation:** Implementing object-oriented features required careful consideration of method binding, `this` resolution, and the `super` keyword. Managing the inheritance chain and method lookup was particularly challenging.
+-   **Memory Management:** With classes and instances, ensuring proper memory management and avoiding circular references became more important, especially when dealing with method closures and `this` binding.
 
 
 ## 🙏 Acknowledgments
